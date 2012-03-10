@@ -288,3 +288,5 @@ object (self)
     end
 
 end
+
+let open_chunk_file = new regular_chunk_file

@@ -53,7 +53,7 @@ object
   method close: unit
 end
 
-class regular_chunk_file : string -> chunk_file
+val open_chunk_file: string -> chunk_file
 
 (** {2 Internal testing}
     These routines aren't intended to be used by normal clients, but

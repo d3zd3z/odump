@@ -157,7 +157,7 @@ let file tmpdir =
     let infos = cfile_write_chunks cfile in
     cfile_verify_chunks cfile infos
   in
-  BatStd.with_dispose ~dispose:(fun x -> x#close) process (new Chunk.regular_chunk_file name)
+  BatStd.with_dispose ~dispose:(fun x -> x#close) process (Chunk.open_chunk_file name)
 
 let suite = "chunk" >::: [
   "compression" >:: compression;
