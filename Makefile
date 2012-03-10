@@ -10,7 +10,7 @@ all: setup.data $(SETUP) force
 	$(RUNSETUP) -build -quiet
 
 test: all
-	./_build/test
+	$(RUNSETUP) -test
 
 # This has to be run before we are able to compile setup.ml using ocamlbuild.
 setup.data: setup.ml

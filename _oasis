@@ -19,3 +19,6 @@ Executable test
   BuildDepends: cryptokit, zip, batteries, oUnit
   CompiledObject: native
   NativeOpt: -S
+
+Test test
+  Command: _build/test
