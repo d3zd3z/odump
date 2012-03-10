@@ -1,5 +1,11 @@
 _build/
+_tags
 myocamlbuild.ml
 setup.ml
 setup.data
 setup.log
+setup.state
+
+# Ignore the links to build versions
+*.native
+*.byte
