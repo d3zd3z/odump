@@ -29,7 +29,33 @@ let uncompress src dest_len =
     String.blit buf 0 dest !dest_offset count;
     dest_offset := !dest_offset + count in
   Zlib.uncompress ~header:true refill flush;
+  if !dest_offset <> dest_len then failwith "uncompress underflow";
   dest
+
+(* Try compressing a block of data.  Return (Some bytes) if the
+ * compressed is smaller than the uncompressed data, or None if the
+ * compression would make it larger. *)
+let compress src =
+  let dest_len = String.length src in
+  let dest = String.create dest_len in
+  let src_offset = ref 0 in
+  let dest_offset = ref 0 in
+  let refill buf =
+    let count = min (String.length buf) (String.length src - !src_offset) in
+    String.blit src !src_offset buf 0 count;
+    src_offset := !src_offset + count;
+    count in
+  let flush buf count =
+    (* Discard overflows, since we're going to discard the whole
+     * result, anyway. *)
+    let count = min count (dest_len - !dest_offset) in
+    String.blit buf 0 dest !dest_offset count;
+    dest_offset := !dest_offset + count in
+  Zlib.compress refill flush;
+  if !dest_offset < dest_len then
+    Some (String.sub dest 0 !dest_offset)
+  else
+    None
 
 (* Each chunk contains a header
  *  offset  length  field
@@ -44,10 +70,103 @@ let uncompress src dest_len =
  * The numbers are always represented in little endian, and the whole
  * chunk is padded to a multiple of 16 bytes. *)
 
+let pool_magic = "adump-pool-v1.1\n"
+
+let put32le buf offset value =
+  let put pos num = buf.[offset + pos] <- Char.chr (num land 255) in
+  put 0 value;
+  put 1 (value lsr 8);
+  put 2 (value lsr 16);
+  put 3 (value lsr 24)
+
+type header = {
+  h_clen: int;
+  h_len: int;
+  h_kind: string;
+  h_hash: Hash.t
+}
+
+let write_header chan header =
+  let buffer = String.create 48 in
+  String.blit pool_magic 0 buffer 0 16;
+  put32le buffer 16 header.h_clen;
+  put32le buffer 20 header.h_len;
+  String.blit header.h_kind 0 buffer 24 4;
+  String.blit (Hash.get_raw header.h_hash) 0 buffer 28 20;
+  output_string chan buffer
+
+class type chunk =
+object
+  method kind: string
+  method data: string
+  method data_length: int
+  method hash: Hash.t
+  method zdata: string option
+  method write_size: int
+  method write: out_channel -> int
+end
+
+class virtual base_chunk =
+object (self)
+  method virtual hash : Hash.t
+  method virtual kind : string
+  method virtual data : string
+  method virtual zdata : string option
+  method virtual data_length : int
+  method write_size =
+    let clen = match self#zdata with
+	None -> self#data_length
+      | Some p -> String.length p in
+    let padding = 15 land (-clen) in
+    48 + clen + padding
+
+  method write chan =
+    let pos = pos_out chan in
+    let (payload, uclen) = match self#zdata with
+	None -> (self#data, -1)
+      | Some p -> (p, self#data_length) in
+    let clen = String.length payload in
+    let header = { h_clen = clen;
+		   h_len = uclen;
+		   h_kind = self#kind;
+		   h_hash = self#hash } in
+    write_header chan header;
+    output_string chan payload;
+    let padding = 15 land (-clen) in
+    if padding > 0 then
+      output_string chan (String.make padding '\x00');
+    pos
+end
+
+class plain_chunk kind data =
+  let hash = lazy (Hash.of_data [kind; data]) in
+  let zdata = lazy (compress data) in
+object
+  inherit base_chunk
+  method hash = Lazy.force hash
+  method data = data
+  method data_length = String.length data
+  method zdata = Lazy.force zdata
+  method kind = kind
+end
+
+class compressed_chunk kind zdata data_length =
+  let data = lazy (uncompress zdata data_length) in
+  let hash = lazy (Hash.of_data [kind; Lazy.force data]) in
+object
+  inherit base_chunk
+  method hash = Lazy.force hash
+  method data = Lazy.force data
+  method data_length = data_length
+  method zdata = Some zdata
+  method kind = kind
+end
+
+let chunk_of_string kind data = new plain_chunk kind data
+
+
 open Printf
 let finally = BatStd.finally
-
-let pool_magic = "adump-pool-v1.1\n"
 
 let read_buffer channel len =
   let buf = String.create len in
@@ -60,13 +179,6 @@ let get32le buf offset =
     (ch 1 lsl 8) lor
     (ch 2 lsl 16) lor
     (ch 3 lsl 24)
-
-type header = {
-  h_clen: int;
-  h_len: int;
-  h_kind: string;
-  h_hash: Hash.t
-}
 
 let get_header chan =
   let buf = read_buffer chan 48 in
@@ -105,50 +217,4 @@ let test_file path =
   ) fd
   (* Pdump.pdump payload *)
 
-let _ = test_file "p/pool-data-0000.data"
-
-(* Some utilities for randomly generating chunks. *)
-
-type lrg = int32
-
-(* This is biased a bit, but it doesn't really matter. *)
-let random_next st limit =
-  let st' = Int32.add (Int32.mul st 1103515245l) 12345l in
-  let cur = Int32.rem (Int32.logand st' 0x7FFFFFFFl) (Int32.of_int limit) in
-  (st', Int32.to_int cur)
-
-let word_list =
-  [| "the"; "be"; "to"; "of"; "and"; "a"; "in"; "that"; "have"; "I";
-     "it"; "for"; "not"; "on"; "with"; "he"; "as"; "you"; "do"; "at";
-     "this"; "but"; "his"; "by"; "from"; "they"; "we"; "say"; "her";
-     "she"; "or"; "an"; "will"; "my"; "one"; "all"; "would"; "there";
-     "their"; "what"; "so"; "up"; "out"; "if"; "about"; "who"; "get";
-     "which"; "go"; "me"; "when"; "make"; "can"; "like"; "time"; "no";
-     "just"; "him"; "know"; "take"; "person"; "into"; "year"; "your";
-     "good"; "some"; "could"; "them"; "see"; "other"; "than"; "then";
-     "now"; "look"; "only"; "come"; "its"; "over"; "think"; "also"
-  |]
-
-let random_word st =
-  let (st', pos) = random_next st (Array.length word_list) in
-  (st', word_list.(pos))
-
-let make_random_string size index =
-  let buf = Buffer.create (size + 10) in
-  Buffer.add_string buf (Printf.sprintf "%d-%d" index size);
-  let rec loop st =
-    if Buffer.length buf >= size then
-      Buffer.sub buf 0 size
-    else begin
-      Buffer.add_char buf ' ';
-      let (st', word) = random_word st in
-      Buffer.add_string buf word;
-      loop st'
-    end in
-  loop (Int32.of_int index)
-
-let main () =
-  for i = 1 to 99 do
-    Printf.printf "[%3d]: '%s'\n" i (make_random_string i i)
-  done
-(* let _ = main () *)
+(* let _ = test_file "p/pool-data-0000.data" *)

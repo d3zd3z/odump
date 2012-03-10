@@ -7,7 +7,7 @@ SETUP = _build/setup.byte
 RUNSETUP = ./_build/setup.byte
 
 all: setup.data $(SETUP) force
-	$(RUNSETUP) -build -quiet
+	$(RUNSETUP) -build
 
 test: all
 	$(RUNSETUP) -test

@@ -11,6 +11,9 @@ let of_raw item =
   if String.length item <> 20 then failwith "Hash must be 20 bytes";
   String.copy item
 
+(* Note that this doesn't copy the string, so be careful. *)
+let get_raw item = item
+
 let to_string hash =
   let buf = Buffer.create (2 * String.length hash) in
   let add ch =

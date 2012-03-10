@@ -6,6 +6,7 @@ val to_string: t -> string
 val of_string: string -> t
 
 val of_raw: string -> t
+val get_raw: t -> string
 
 val succ: t -> t
 val pred: t -> t
