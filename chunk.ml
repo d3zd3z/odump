@@ -234,8 +234,11 @@ class regular_chunk_file path =
 object (self)
   val mutable reader = None
   val mutable writer = None
+  val mutable size = 0
 
   method private prepare_read =
+    (* If we've been writing, make sure to flush. *)
+    self#flush;
     match reader with
 	None ->
 	  let r = open_in_bin path in
@@ -248,6 +251,7 @@ object (self)
 	None ->
 	  let w = open_out_gen [Open_wronly; Open_creat; Open_binary] 0o644 path in
 	  writer <- Some w;
+	  size <- out_channel_length w;
 	  w
       | Some w -> w
 
@@ -263,9 +267,10 @@ object (self)
 
   method append (chunk : chunk) =
     let chan = self#prepare_write in
-    let pos = out_channel_length chan in
-    seek_out chan pos;
+    seek_out chan size;
+    let pos = size in
     let _ = chunk#write chan in
+    size <- size + chunk#write_size;
     pos
 
   method flush =

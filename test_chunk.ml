@@ -155,7 +155,8 @@ let file tmpdir =
   let name = Filename.concat tmpdir "file.data" in
   let process cfile =
     let infos = cfile_write_chunks cfile in
-    cfile_verify_chunks cfile infos
+    cfile_verify_chunks cfile infos;
+    cfile_verify_chunks cfile (List.rev infos)
   in
   BatStd.with_dispose ~dispose:(fun x -> x#close) process (Chunk.open_chunk_file name)
 
