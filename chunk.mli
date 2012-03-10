@@ -43,6 +43,18 @@ val read_info: in_channel -> info
 val read: in_channel -> chunk
 (** Read the next chunk from the given channel. *)
 
+class type chunk_file =
+object
+  method read: int -> chunk
+  (* method read_unchecked: int -> (chunk * Hash.t) *)
+  method read_info: int -> info
+  method append: chunk -> int
+  method flush: unit
+  method close: unit
+end
+
+class regular_chunk_file : string -> chunk_file
+
 (** {2 Internal testing}
     These routines aren't intended to be used by normal clients, but
     are exposed to help with unit testing. *)

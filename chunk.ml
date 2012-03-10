@@ -105,6 +105,7 @@ object
   method zdata: string option
   method write_size: int
   method write: out_channel -> int
+  (* TODO: The return result from write isn't actually needed. *)
 end
 
 class virtual base_chunk =
@@ -216,3 +217,74 @@ let read chan =
     if header.h_hash <> chunk#hash then failwith "Incorrect SHA1 reading chunk"
   end;
   chunk
+
+(* {6 Files of chunks} *)
+
+class type chunk_file =
+object
+  method read: int -> chunk
+  (* method read_unchecked: int -> (chunk * Hash.t) *)
+  method read_info: int -> info
+  method append: chunk -> int
+  method flush: unit
+  method close: unit
+end
+
+class regular_chunk_file path =
+object (self)
+  val mutable reader = None
+  val mutable writer = None
+
+  method private prepare_read =
+    match reader with
+	None ->
+	  let r = open_in_bin path in
+	  reader <- Some r;
+	  r
+      | Some r -> r
+
+  method private prepare_write =
+    match writer with
+	None ->
+	  let w = open_out_gen [Open_wronly; Open_creat; Open_binary] 0o644 path in
+	  writer <- Some w;
+	  w
+      | Some w -> w
+
+  method read offset =
+    let chan = self#prepare_read in
+    seek_in chan offset;
+    read chan
+
+  method read_info offset =
+    let chan = self#prepare_read in
+    seek_in chan offset;
+    read_info chan
+
+  method append (chunk : chunk) =
+    let chan = self#prepare_write in
+    let pos = out_channel_length chan in
+    seek_out chan pos;
+    let _ = chunk#write chan in
+    pos
+
+  method flush =
+    match writer with
+	None -> ()
+      | Some chan -> flush chan
+
+  method close =
+    begin match writer with
+	None -> ()
+      | Some chan ->
+	close_out chan;
+	writer <- None
+    end;
+    begin match reader with
+	None -> ()
+      | Some chan ->
+	close_in chan;
+	reader <- None
+    end
+
+end

@@ -124,14 +124,44 @@ let verify_data infos chan =
     assert_equal ch#kind ch2#kind in
   List.iter each infos
 
+(* Repeat of the above, using the chunk_file API *)
+let cfile_write_chunks cfile =
+  let each size =
+    let ch = Chunk.chunk_of_string "blob" (make_random_string size size) in
+    let pos = cfile#append ch in
+    (pos, ch) in
+  List.map each (test_sizes ())
+
+let cfile_verify_chunks cfile infos =
+  let each (pos, ch) =
+    let info = cfile#read_info pos in
+    assert_equal info.Chunk.in_hash ch#hash;
+    assert_equal info.Chunk.in_kind ch#kind;
+    assert_equal info.Chunk.in_data_length ch#data_length;
+    assert_equal info.Chunk.in_write_size ch#write_size;
+    let ch2 = cfile#read pos in
+    assert_equal ch#hash ch2#hash;
+    assert_equal ch#data ch2#data;
+    assert_equal ch#kind ch2#kind in
+  List.iter each infos
+
 let io tmpdir =
   let name = Filename.concat tmpdir "foo.data" in
   let infos = BatStd.with_dispose ~dispose:close_out write_chunks (open_out_bin name) in
   BatStd.with_dispose ~dispose:close_in (verify_info infos) (open_in_bin name);
   BatStd.with_dispose ~dispose:close_in (verify_data infos) (open_in_bin name)
 
+let file tmpdir =
+  let name = Filename.concat tmpdir "file.data" in
+  let process cfile =
+    let infos = cfile_write_chunks cfile in
+    cfile_verify_chunks cfile infos
+  in
+  BatStd.with_dispose ~dispose:(fun x -> x#close) process (new Chunk.regular_chunk_file name)
+
 let suite = "chunk" >::: [
   "compression" >:: compression;
   "simple" >:: simple;
   "io" >:: with_temp_dir io;
+  "file" >:: with_temp_dir file;
 ]
