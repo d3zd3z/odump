@@ -26,6 +26,22 @@ object
 end
 
 val chunk_of_string: string -> string -> chunk
+(** [Chunk.chunk_of_string kind str] Create a chunk out of a kind and
+    a string. *)
+
+type info = {
+  in_hash: Hash.t;
+  in_kind: string;
+  in_data_length: int;
+  in_write_size: int }
+
+val header_size: int
+val read_info: in_channel -> info
+(** Read the header of the next chunk in the channel.  Returns the
+    info data about it. *)
+
+val read: in_channel -> chunk
+(** Read the next chunk from the given channel. *)
 
 (** {2 Internal testing}
     These routines aren't intended to be used by normal clients, but

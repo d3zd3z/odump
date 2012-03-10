@@ -10,7 +10,8 @@ Executable chunk
   BuildTools: ocamlbuild
   MainIs:     chunk.ml
   BuildDepends: cryptokit, zip, batteries
-  CompiledObject: byte
+  CompiledObject: native
+  NativeOpt: -S
   
 Executable test
   Path: .

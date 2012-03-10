@@ -71,6 +71,7 @@ let compress src =
  * chunk is padded to a multiple of 16 bytes. *)
 
 let pool_magic = "adump-pool-v1.1\n"
+let header_size = 48
 
 let put32le buf offset value =
   let put pos num = buf.[offset + pos] <- Char.chr (num land 255) in
@@ -87,7 +88,7 @@ type header = {
 }
 
 let write_header chan header =
-  let buffer = String.create 48 in
+  let buffer = String.create header_size in
   String.blit pool_magic 0 buffer 0 16;
   put32le buffer 16 header.h_clen;
   put32le buffer 20 header.h_len;
@@ -118,7 +119,7 @@ object (self)
 	None -> self#data_length
       | Some p -> String.length p in
     let padding = 15 land (-clen) in
-    48 + clen + padding
+    header_size + clen + padding
 
   method write chan =
     let pos = pos_out chan in
@@ -164,9 +165,11 @@ end
 
 let chunk_of_string kind data = new plain_chunk kind data
 
-
-open Printf
-let finally = BatStd.finally
+type info = {
+  in_hash: Hash.t;
+  in_kind: string;
+  in_data_length: int;
+  in_write_size: int }
 
 let read_buffer channel len =
   let buf = String.create len in
@@ -174,14 +177,17 @@ let read_buffer channel len =
   buf
 
 let get32le buf offset =
-  let ch pos = Char.code buf.[offset + pos] in
-  ch 0 lor
-    (ch 1 lsl 8) lor
-    (ch 2 lsl 16) lor
-    (ch 3 lsl 24)
+  let ch pos = Int32.of_int (Char.code buf.[offset + pos]) in
+  let tmp = Int32.logor (ch 0)
+    (Int32.logor (Int32.shift_left (ch 1) 8)
+       (Int32.logor (Int32.shift_left (ch 2) 16)
+	  (Int32.shift_left (ch 3) 24))) in
+  (* Make sure that negatives are still negative, even on 64-bit platforms. *)
+  let tmp = Int32.to_int tmp in
+  if tmp > 0x3FFFFFFF then tmp - (1 lsl 31) else tmp
 
 let get_header chan =
-  let buf = read_buffer chan 48 in
+  let buf = read_buffer chan header_size in
   let magic = String.sub buf 0 16 in
   if magic <> pool_magic then failwith "Invalid magic"; (* TODO: Proper exception. *)
   let clen = get32le buf 16 in
@@ -190,31 +196,23 @@ let get_header chan =
   let hash = String.sub buf 28 20 in
   { h_clen = clen; h_len = len; h_kind = kind; h_hash = Hash.of_raw hash }
 
-let get_payload chan len =
-  let payload = read_buffer chan len in
-  let pad_count = 15 land (-len) in
-  if pad_count > 0 then begin
-    let _ = read_buffer chan pad_count in
-    ()
+let read_info chan =
+  let header = get_header chan in
+  let padding = 15 land (-header.h_clen) in
+  { in_hash = header.h_hash;
+    in_kind = header.h_kind;
+    in_data_length = if header.h_len = -1 then header.h_clen else header.h_len;
+    in_write_size = header_size + header.h_clen + padding }
+
+let read chan =
+  let header = get_header chan in
+  let data = read_buffer chan header.h_clen in
+  let chunk = if header.h_len = -1 then
+    new plain_chunk header.h_kind data
+  else
+    new compressed_chunk header.h_kind data header.h_len in
+  if true then begin
+    (* Verify the hash. *)
+    if header.h_hash <> chunk#hash then failwith "Incorrect SHA1 reading chunk"
   end;
-  payload
-
-let test_file path =
-  let fd = open_in_bin path in
-  let closer () = close_in fd in
-  finally closer (fun fd ->
-    let header = get_header fd in
-    printf "len=%d, clen=%d, kind=%s\n" header.h_len header.h_clen header.h_kind;
-    let payload = get_payload fd header.h_clen in
-    let payload = if header.h_len > 0 then
-	uncompress payload header.h_len
-      else
-	payload in
-    printf "hash: %s\n" (Hash.to_string header.h_hash);
-    let h2 = Hash.of_data [ header.h_kind; payload ] in
-    printf "hash: %s\n" (Hash.to_string h2);
-    (* Pdump.pdump payload *)
-  ) fd
-  (* Pdump.pdump payload *)
-
-(* let _ = test_file "p/pool-data-0000.data" *)
+  chunk

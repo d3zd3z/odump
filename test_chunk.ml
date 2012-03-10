@@ -89,19 +89,46 @@ let test_sizes () =
   let sizes = L.filter (fun a -> a >= 0) (L.flatten sizes) in
   L.sort_unique compare sizes
 
+(* Write a series of chunks to the given file, returning a list of
+   pairs of 'pos', and the chunks. *)
+let write_chunks chan =
+  let old_pos = ref (pos_out chan) in
+  let each size =
+    let ch = Chunk.chunk_of_string "blob" (make_random_string size size) in
+    let pos = ch#write chan in
+    assert_equal pos !old_pos;
+    assert_equal ch#write_size (pos_out chan - pos);
+    old_pos := pos_out chan;
+    (pos, ch) in
+  List.map each (test_sizes ())
+
+(* Given a list of (pos * chunk) pairs, and an input channel, verify
+   that the info from read_info is correct. *)
+let verify_info infos chan =
+  let each (pos, ch) =
+    seek_in chan pos;
+    let info = Chunk.read_info chan in
+    assert_equal info.Chunk.in_hash ch#hash;
+    assert_equal info.Chunk.in_kind ch#kind;
+    assert_equal info.Chunk.in_data_length ch#data_length;
+    assert_equal info.Chunk.in_write_size ch#write_size in
+  List.iter each infos
+
+(* Verify the chunks themselves. *)
+let verify_data infos chan =
+  let each (pos, ch) =
+    seek_in chan pos;
+    let ch2 = Chunk.read chan in
+    assert_equal ch#hash ch2#hash;
+    assert_equal ch#data ch2#data;
+    assert_equal ch#kind ch2#kind in
+  List.iter each infos
+
 let io tmpdir =
-  let wtest chan =
-    let old_pos = ref 0 in
-    let each size =
-      let ch = Chunk.chunk_of_string "blob" (make_random_string size size) in
-      let pos = ch#write chan in
-      assert_equal pos !old_pos;
-      assert_equal ch#write_size (pos_out chan - pos);
-      old_pos := pos_out chan in
-    List.iter each (test_sizes ()) in
   let name = Filename.concat tmpdir "foo.data" in
-  bracket (fun () -> open_out_bin name) wtest close_out ();
-  ()
+  let infos = BatStd.with_dispose ~dispose:close_out write_chunks (open_out_bin name) in
+  BatStd.with_dispose ~dispose:close_in (verify_info infos) (open_in_bin name);
+  BatStd.with_dispose ~dispose:close_in (verify_data infos) (open_in_bin name)
 
 let suite = "chunk" >::: [
   "compression" >:: compression;
