@@ -105,6 +105,8 @@ object
   (* TODO: The return result from write isn't actually needed. *)
 end
 
+type t = chunk
+
 class virtual base_chunk =
 object (self)
   method virtual hash : Hash.t

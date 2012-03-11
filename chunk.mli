@@ -25,6 +25,8 @@ object
   method write: out_channel -> int
 end
 
+type t = chunk
+
 val chunk_of_string: string -> string -> chunk
 (** [Chunk.chunk_of_string kind str] Create a chunk out of a kind and
     a string. *)
