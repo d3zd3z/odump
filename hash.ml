@@ -43,3 +43,6 @@ let hash_change (--) sentinel hash =
 let succ = hash_change (+) '\x00'
 let pred = hash_change (-) '\xff'
 
+let compare = String.compare
+
+let peek_byte hash pos = Char.code hash.[pos]

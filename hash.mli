@@ -10,3 +10,8 @@ val get_raw: t -> string
 
 val succ: t -> t
 val pred: t -> t
+
+val peek_byte: t -> int -> int
+
+(* To satisfy BatInterfaces.OrderedType. *)
+val compare: t -> t -> int

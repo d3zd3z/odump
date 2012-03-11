@@ -13,6 +13,8 @@
  * compressed version will be used for network transfer or the storage
  * pool. *)
 
+open Binary
+
 (* Compression/decompression of buffers. *)
 
 let uncompress src dest_len =
@@ -72,13 +74,6 @@ let compress src =
 
 let pool_magic = "adump-pool-v1.1\n"
 let header_size = 48
-
-let put32le buf offset value =
-  let put pos num = buf.[offset + pos] <- Char.chr (num land 255) in
-  put 0 value;
-  put 1 (value lsr 8);
-  put 2 (value lsr 16);
-  put 3 (value lsr 24)
 
 type header = {
   h_clen: int;
@@ -171,21 +166,6 @@ type info = {
   in_kind: string;
   in_data_length: int;
   in_write_size: int }
-
-let read_buffer channel len =
-  let buf = String.create len in
-  really_input channel buf 0 len;
-  buf
-
-let get32le buf offset =
-  let ch pos = Int32.of_int (Char.code buf.[offset + pos]) in
-  let tmp = Int32.logor (ch 0)
-    (Int32.logor (Int32.shift_left (ch 1) 8)
-       (Int32.logor (Int32.shift_left (ch 2) 16)
-	  (Int32.shift_left (ch 3) 24))) in
-  (* Make sure that negatives are still negative, even on 64-bit platforms. *)
-  let tmp = Int32.to_int tmp in
-  if tmp > 0x3FFFFFFF then tmp - (1 lsl 31) else tmp
 
 let get_header chan =
   let buf = read_buffer chan header_size in
