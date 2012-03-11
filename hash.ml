@@ -1,5 +1,7 @@
 (* Sha1 hashes. *)
 
+open Batteries_uni
+
 type t = string
 
 let of_data lst =

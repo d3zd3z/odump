@@ -1,3 +1,5 @@
+open Batteries_uni
+open LegacyIO
 open OUnit
 
 let basic () =

@@ -1,14 +1,16 @@
 (* File index *)
 
+open Batteries_uni
+open LegacyIO
+
 open Binary
 
-module HashMap = BatMap.Make(Hash)
-module E = BatEnum
-module StringMap = BatMap.StringMap
-module StringSet = BatSet.StringSet
-module IntMap = BatMap.IntMap
+module HashMap = Map.Make(Hash)
+module StringMap = Map.StringMap
+module StringSet = Set.StringSet
+module IntMap = Map.IntMap
 
-open E.Infix
+open Enum.Infix
 
 class type file_index =
 object
@@ -22,14 +24,14 @@ object
   method clear: unit
 end
 
-(* E.drop_while is too lazy to combine well with side effects, so here
+(* Enum.drop_while is too lazy to combine well with side effects, so here
    is a strict version. *)
 let rec strict_drop_while f enum =
-  match E.peek enum with
+  match Enum.peek enum with
       None -> ()
     | Some item ->
       if f item then begin
-	E.junk enum;
+	Enum.junk enum;
 	strict_drop_while f enum
       end
 
@@ -62,7 +64,7 @@ let write_header chan file_size =
   output_string chan buf
 
 let write_top chan enum =
-  let hashes = E.map (fun (hash, _) -> hash) enum in
+  let hashes = Enum.map (fun (hash, _) -> hash) enum in
   let top = compute_top_index hashes in
   let buf = String.create (4 * Array.length top) in
   for i = 0 to Array.length top - 1 do
@@ -71,7 +73,7 @@ let write_top chan enum =
   output_string chan buf
 
 let write_hashes chan enum =
-  E.iter (fun (hash, _) -> output_string chan (Hash.get_raw hash)) enum
+  Enum.iter (fun (hash, _) -> output_string chan (Hash.get_raw hash)) enum
 
 let write_offsets chan enum =
   (* The complex merged enum is not fast, so use a growable buffer for this. *)
@@ -80,13 +82,13 @@ let write_offsets chan enum =
     let tmp = String.create 4 in
     put32le tmp 0 offset;
     Buffer.add_string buf tmp in
-  E.iter each enum;
-  Buffer.output_buffer chan buf
+  Enum.iter each enum;
+  Legacy.Buffer.output_buffer chan buf
 
 (* Compute a mapping of kind names to integer indices starting with 0. *)
-let build_kind_map (kinds: string E.t) : int StringMap.t =
+let build_kind_map (kinds: string Enum.t) : int StringMap.t =
   let unique_kinds = StringSet.enum (StringSet.of_enum kinds) in
-  let pairs = E.combine (unique_kinds, E.range 0) in
+  let pairs = Enum.combine (unique_kinds, Enum.range 0) in
   StringMap.of_enum pairs
 
 let write_kind_header chan kind_map =
@@ -94,21 +96,21 @@ let write_kind_header chan kind_map =
   let buf = String.create (4 + 4 * count) in
   put32le buf 0 count;
   let put pos (kind, _) = String.blit kind 0 buf (4 + 4 * pos) 4 in
-  E.iteri put (StringMap.enum kind_map);
+  Enum.iteri put (StringMap.enum kind_map);
   output_string chan buf
 
 let write_kinds chan enum =
-  let kind_map = build_kind_map (E.map (fun (_, (_, kind)) -> kind) (E.clone enum)) in
+  let kind_map = build_kind_map (Enum.map (fun (_, (_, kind)) -> kind) (Enum.clone enum)) in
   write_kind_header chan kind_map;
   let put (_, (_, kind)) = output_byte chan (StringMap.find kind kind_map) in
-  E.iter put enum
+  Enum.iter put enum
 
 (* TODO: Reorder this to put chan first *)
-let write_index' file_size (enum: (Hash.t * (int * string)) E.t) chan =
+let write_index' file_size (enum: (Hash.t * (int * string)) Enum.t) chan =
   write_header chan file_size;
-  write_top chan (E.clone enum);
-  write_hashes chan (E.clone enum);
-  write_offsets chan (E.clone enum);
+  write_top chan (Enum.clone enum);
+  write_hashes chan (Enum.clone enum);
+  write_offsets chan (Enum.clone enum);
   write_kinds chan enum
 
 let write_index path file_size enum =
@@ -149,7 +151,7 @@ let read_kind_map chan =
   let buf1 = read_buffer chan 4 in
   let count = get32le buf1 0 in
   let buf2 = read_buffer chan (4 * count) in
-  let all = E.map (fun i -> (i, String.sub buf2 (4 * i) 4)) (0 -- (count - 1)) in
+  let all = Enum.map (fun i -> (i, String.sub buf2 (4 * i) 4)) (0 -- (count - 1)) in
   IntMap.of_enum all
 
 (** {6 Loading} *)
@@ -173,13 +175,13 @@ let load_index path file_size =
 class type simple_index =
 object
   method find : Hash.t -> (int * string) option
-  method enum : (Hash.t * (int * string)) E.t
+  method enum : (Hash.t * (int * string)) Enum.t
 end
 
 class empty_index : simple_index =
 object
   method find _ = None
-  method enum = E.empty ()
+  method enum = Enum.empty ()
 end
 
 class loaded_index path file_size : simple_index =
@@ -211,26 +213,26 @@ object (self)
 
   method enum =
     let get idx = (Hash.of_raw (String.sub hashes (20 * idx) 20), (offsets.(idx), get_kind idx)) in
-    E.map get (0 --^ top.(255))
+    Enum.map get (0 --^ top.(255))
 end
 
 (* BatEnum.merge seems to be broken, let's try a possibly less
    efficient, but hopefully correct version. *)
 let merge test a b =
   let next () =
-    match (E.get a, E.get b) with
-	(None, None) -> raise E.No_more_elements
+    match (Enum.get a, Enum.get b) with
+	(None, None) -> raise Enum.No_more_elements
       | (Some aa, None) -> aa
       | (None, Some bb) -> bb
       | (Some aa, Some bb) ->
 	if test aa bb then begin
-	  E.push b bb;
+	  Enum.push b bb;
 	  aa
 	end else begin
-	  E.push a aa;
+	  Enum.push a aa;
 	  bb
 	end in
-  E.from next
+  Enum.from next
 
 class combined_file_index path : file_index =
 object (self)

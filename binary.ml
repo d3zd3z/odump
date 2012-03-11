@@ -1,5 +1,8 @@
 (* Binary support. *)
 
+open Batteries_uni
+open LegacyIO
+
 let get32le buf offset =
   let ch pos = Int32.of_int (Char.code buf.[offset + pos]) in
   let tmp = Int32.logor (ch 0)

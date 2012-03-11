@@ -1,5 +1,8 @@
 (* Test utilities. *)
 
+open Batteries_uni
+open LegacyIO
+
 (* Similar to base64, but filename safe *)
 let chars =
   [| 'A';'B';'C';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O';'P';
