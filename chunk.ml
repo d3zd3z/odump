@@ -235,10 +235,14 @@ object (self)
   val mutable reader = None
   val mutable writer = None
   val mutable size = 0
+  val mutable dirty = false
 
   method private prepare_read =
     (* If we've been writing, make sure to flush. *)
-    self#flush;
+    if dirty then begin
+      self#flush;
+      dirty <- false
+    end;
     match reader with
 	None ->
 	  let r = open_in_bin path in
@@ -247,6 +251,7 @@ object (self)
       | Some r -> r
 
   method private prepare_write =
+    dirty <- true;
     match writer with
 	None ->
 	  let w = open_out_gen [Open_wronly; Open_creat; Open_binary] 0o644 path in
