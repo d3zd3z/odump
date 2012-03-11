@@ -6,46 +6,6 @@ open TUtil
 
 module L = BatList
 
-(* Some utilities for randomly generating chunks. *)
-
-type lrg = int32
-
-(* This is biased a bit, but it doesn't really matter. *)
-let random_next st limit =
-  let st' = Int32.add (Int32.mul st 1103515245l) 12345l in
-  let cur = Int32.rem (Int32.logand st' 0x7FFFFFFFl) (Int32.of_int limit) in
-  (st', Int32.to_int cur)
-
-let word_list =
-  [| "the"; "be"; "to"; "of"; "and"; "a"; "in"; "that"; "have"; "I";
-     "it"; "for"; "not"; "on"; "with"; "he"; "as"; "you"; "do"; "at";
-     "this"; "but"; "his"; "by"; "from"; "they"; "we"; "say"; "her";
-     "she"; "or"; "an"; "will"; "my"; "one"; "all"; "would"; "there";
-     "their"; "what"; "so"; "up"; "out"; "if"; "about"; "who"; "get";
-     "which"; "go"; "me"; "when"; "make"; "can"; "like"; "time"; "no";
-     "just"; "him"; "know"; "take"; "person"; "into"; "year"; "your";
-     "good"; "some"; "could"; "them"; "see"; "other"; "than"; "then";
-     "now"; "look"; "only"; "come"; "its"; "over"; "think"; "also"
-  |]
-
-let random_word st =
-  let (st', pos) = random_next st (Array.length word_list) in
-  (st', word_list.(pos))
-
-let make_random_string size index =
-  let buf = Buffer.create (size + 10) in
-  Buffer.add_string buf (Printf.sprintf "%d-%d" index size);
-  let rec loop st =
-    if Buffer.length buf >= size then
-      Buffer.sub buf 0 size
-    else begin
-      Buffer.add_char buf ' ';
-      let (st', word) = random_word st in
-      Buffer.add_string buf word;
-      loop st'
-    end in
-  loop (Int32.of_int index)
-
 let compression () =
   assert_equal None (Chunk.compress (make_random_string 10 10));
   let comp len =
@@ -96,7 +56,7 @@ let test_sizes () =
 let write_chunks chan =
   let old_pos = ref (pos_out chan) in
   let each size =
-    let ch = Chunk.chunk_of_string "blob" (make_random_string size size) in
+    let ch = make_random_chunk size size in
     let pos = ch#write chan in
     assert_equal pos !old_pos;
     assert_equal ch#write_size (pos_out chan - pos);
@@ -129,7 +89,7 @@ let verify_data infos chan =
 (* Repeat of the above, using the chunk_file API *)
 let cfile_write_chunks cfile =
   let each size =
-    let ch = Chunk.chunk_of_string "blob" (make_random_string size size) in
+    let ch = make_random_chunk size size in
     let pos = cfile#append ch in
     (pos, ch) in
   List.map each (test_sizes ())

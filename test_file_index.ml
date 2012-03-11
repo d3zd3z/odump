@@ -12,7 +12,6 @@ open Enum.Infix
 module HashMap = Map.Make(Hash)
 module HashSet = Set.Make(Hash)
 
-let numbered_chunk n = Chunk.chunk_of_string "blob" (string_of_int n)
 let numbered_hash n = Hash.of_data [string_of_int n]
 
 (* Check that the given hash is present (and correct), and that the

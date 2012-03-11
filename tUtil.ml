@@ -53,3 +53,42 @@ let with_temp_dir op () =
 	Unix.Unix_error _ -> loop (count - 1) in
   let path = loop 5 in
   BatStd.with_dispose ~dispose:cleanup op path
+
+(* This is biased a bit, but it doesn't really matter. *)
+let random_next st limit =
+  let st' = Int32.add (Int32.mul st 1103515245l) 12345l in
+  let cur = Int32.rem (Int32.logand st' 0x7FFFFFFFl) (Int32.of_int limit) in
+  (st', Int32.to_int cur)
+
+let word_list =
+  [| "the"; "be"; "to"; "of"; "and"; "a"; "in"; "that"; "have"; "I";
+     "it"; "for"; "not"; "on"; "with"; "he"; "as"; "you"; "do"; "at";
+     "this"; "but"; "his"; "by"; "from"; "they"; "we"; "say"; "her";
+     "she"; "or"; "an"; "will"; "my"; "one"; "all"; "would"; "there";
+     "their"; "what"; "so"; "up"; "out"; "if"; "about"; "who"; "get";
+     "which"; "go"; "me"; "when"; "make"; "can"; "like"; "time"; "no";
+     "just"; "him"; "know"; "take"; "person"; "into"; "year"; "your";
+     "good"; "some"; "could"; "them"; "see"; "other"; "than"; "then";
+     "now"; "look"; "only"; "come"; "its"; "over"; "think"; "also"
+  |]
+
+let random_word st =
+  let (st', pos) = random_next st (Array.length word_list) in
+  (st', word_list.(pos))
+
+let make_random_string size index =
+  let buf = Buffer.create (size + 10) in
+  Buffer.add_string buf (Printf.sprintf "%d-%d" index size);
+  let rec loop st =
+    if Buffer.length buf >= size then
+      Buffer.sub buf 0 size
+    else begin
+      Buffer.add_char buf ' ';
+      let (st', word) = random_word st in
+      Buffer.add_string buf word;
+      loop st'
+    end in
+  loop (Int32.of_int index)
+
+let make_random_chunk ?(kind="blob") size index =
+  Chunk.chunk_of_string kind (make_random_string size index)
