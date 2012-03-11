@@ -13,5 +13,5 @@ val pred: t -> t
 
 val peek_byte: t -> int -> int
 
-(* To satisfy BatInterfaces.OrderedType. *)
+(* To satisfy Batteries.Interfaces.OrderedType. *)
 val compare: t -> t -> int

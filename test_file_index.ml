@@ -37,7 +37,7 @@ let check_hash idx hash pos kind =
 let memory tmpdir =
   let size = 10000 in
   let src = 1 -- size in
-  let kinds = Enum.cycle (BatList.enum ["blob"; "dir "; "dir0"; "dir1"; "qwwe"]) in
+  let kinds = Enum.cycle (List.enum ["blob"; "dir "; "dir0"; "dir1"; "qwwe"]) in
   let info = Enum.combine (src, kinds) in
   let idx = File_index.make (Filename.concat tmpdir "data.idx") in
   Enum.iter (fun (n, kind) -> idx#add (numbered_hash n) n kind) (Enum.clone info);
@@ -47,7 +47,7 @@ let memory tmpdir =
 
   (* Add more *)
   let src = Enum.append src ((size+1) -- (2*size)) in
-  let kinds = Enum.cycle (BatList.enum ["blob"; "dir "; "dir0"; "dir1"; "qwwe"]) in
+  let kinds = Enum.cycle (List.enum ["blob"; "dir "; "dir0"; "dir1"; "qwwe"]) in
   let info2 = Enum.combine (src, kinds) in
   Enum.iter (fun (n, kind) -> idx#add (numbered_hash n) n kind) (Enum.clone info2);
   Enum.iter (fun (n, kind) -> check_hash idx (numbered_hash n) n kind) (Enum.clone info);

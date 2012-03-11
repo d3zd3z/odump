@@ -52,7 +52,7 @@ let with_temp_dir op () =
     with
 	Unix.Unix_error _ -> loop (count - 1) in
   let path = loop 5 in
-  BatStd.with_dispose ~dispose:cleanup op path
+  Std.with_dispose ~dispose:cleanup op path
 
 (* This is biased a bit, but it doesn't really matter. *)
 let random_next st limit =

@@ -4,8 +4,6 @@ open OUnit
 open Printf
 open TUtil
 
-module L = BatList
-
 let compression () =
   assert_equal None (Chunk.compress (make_random_string 10 10));
   let comp len =
@@ -47,9 +45,9 @@ let range a b =
 
 let test_sizes () =
   let sizes = range 0 18 in
-  let sizes = L.map (fun a -> let a = 1 lsl a in [a-1; a; a+1]) sizes in
-  let sizes = L.filter (fun a -> a >= 0) (L.flatten sizes) in
-  L.sort_unique compare sizes
+  let sizes = List.map (fun a -> let a = 1 lsl a in [a-1; a; a+1]) sizes in
+  let sizes = List.filter (fun a -> a >= 0) (List.flatten sizes) in
+  List.sort_unique compare sizes
 
 (* Write a series of chunks to the given file, returning a list of
    pairs of 'pos', and the chunks. *)
@@ -109,9 +107,9 @@ let cfile_verify_chunks cfile infos =
 
 let io tmpdir =
   let name = Filename.concat tmpdir "foo.data" in
-  let infos = BatStd.with_dispose ~dispose:close_out write_chunks (open_out_bin name) in
-  BatStd.with_dispose ~dispose:close_in (verify_info infos) (open_in_bin name);
-  BatStd.with_dispose ~dispose:close_in (verify_data infos) (open_in_bin name)
+  let infos = Std.with_dispose ~dispose:close_out write_chunks (open_out_bin name) in
+  Std.with_dispose ~dispose:close_in (verify_info infos) (open_in_bin name);
+  Std.with_dispose ~dispose:close_in (verify_data infos) (open_in_bin name)
 
 let file tmpdir =
   let name = Filename.concat tmpdir "file.data" in
@@ -120,7 +118,7 @@ let file tmpdir =
     cfile_verify_chunks cfile infos;
     cfile_verify_chunks cfile (List.rev infos)
   in
-  BatStd.with_dispose ~dispose:(fun x -> x#close) process (Chunk.open_chunk_file name)
+  Std.with_dispose ~dispose:(fun x -> x#close) process (Chunk.open_chunk_file name)
 
 let suite = "chunk" >::: [
   "compression" >:: compression;
