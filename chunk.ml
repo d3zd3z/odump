@@ -212,6 +212,7 @@ object
   method append: chunk -> int
   method flush: unit
   method close: unit
+  method size: int
 end
 
 class regular_chunk_file path =
@@ -231,6 +232,7 @@ object (self)
 	None ->
 	  let r = open_in_bin path in
 	  reader <- Some r;
+	  size <- in_channel_length r;
 	  r
       | Some r -> r
 
@@ -280,6 +282,10 @@ object (self)
 	close_in chan;
 	reader <- None
     end
+
+  method size =
+    let _ = self#prepare_read in
+    size
 
 end
 

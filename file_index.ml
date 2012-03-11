@@ -24,6 +24,8 @@ object
   method clear: unit
 end
 
+type t = file_index
+
 (* Enum.drop_while is too lazy to combine well with side effects, so here
    is a strict version. *)
 let rec strict_drop_while f enum =

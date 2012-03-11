@@ -17,3 +17,5 @@ val make_random_chunk: ?kind:string -> int -> int -> Chunk.t
     chunk.  The data of the chunk itself will be the result of calling
     [make_random_chunk] with the same parameters.  The default [kind] is
     "blob". *)
+
+val do_cleanup: bool ref

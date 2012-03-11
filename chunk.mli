@@ -53,6 +53,7 @@ object
   method append: chunk -> int
   method flush: unit
   method close: unit
+  method size: int
 end
 
 val open_chunk_file: string -> chunk_file

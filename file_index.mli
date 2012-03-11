@@ -14,4 +14,6 @@ object
   method clear: unit
 end
 
+type t = file_index
+
 val make: string -> file_index
