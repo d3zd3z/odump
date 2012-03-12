@@ -4,12 +4,7 @@ open Batteries_uni
 open LegacyIO
 
 (* Similar to base64, but filename safe *)
-let chars =
-  [| 'A';'B';'C';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'N';'O';'P';
-     'Q';'R';'S';'T';'U';'V';'W';'X';'Y';'Z';'a';'b';'c';'d';'e';'f';
-     'g';'h';'i';'j';'k';'l';'m';'n';'o';'p';'q';'r';'s';'t';'u';'v';
-     'w';'x';'y';'z';'0';'1';'2';'3';'4';'5';'6';'7';'8';'9';'-';'_'
-  |]
+let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 (* Local random state just for the filenames. *)
 let rnd = Random.State.make
@@ -19,7 +14,7 @@ let random_name base =
   let buf = Buffer.create (String.length base + 16) in
   Buffer.add_string buf base;
   for i = 0 to 15 do
-    Buffer.add_char buf chars.(Random.State.int rnd 64)
+    Buffer.add_char buf chars.[Random.State.int rnd 64]
   done;
   Buffer.contents buf
 
