@@ -1,5 +1,6 @@
 _build/
 _tags
+_tags.bak
 myocamlbuild.ml
 setup.ml
 setup.data

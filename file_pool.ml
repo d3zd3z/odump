@@ -103,6 +103,8 @@ object
   method find : Hash.t -> Chunk.t
   method find_option : Hash.t -> Chunk.t option
 
+  method get_backups : Hash.t list
+
   method flush : unit
   method close : unit
 end
@@ -173,5 +175,13 @@ object (self)
   method close =
     self#flush;
     List.iter (fun n -> n.n_file#close) nodes
+
+  method get_backups =
+    let backups_name = Filename.concat metadata "backups.txt" in
+    try
+      let get inp = List.of_enum **> Enum.map Hash.of_string **> IO.lines_of inp in
+      with_dispose ~dispose:close_in get (open_in backups_name)
+    with
+	Sys_error _ -> []
     
 end

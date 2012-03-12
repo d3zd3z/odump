@@ -5,12 +5,12 @@ Synopsis:    Deduped archival and backup
 Authors:     David Brown
 License:     LGPL-2.1 with OCaml linking exception
 
-Executable chunk
-  Build: false
+Executable odump
+  Build: true
   Path:       .
   BuildTools: ocamlbuild
-  MainIs:     chunk.ml
-  BuildDepends: cryptokit, zip, batteries
+  MainIs:     odump.ml
+  BuildDepends: cryptokit, zip, batteries, uuidm, xml-light
   CompiledObject: native
   NativeOpt: -S
 
@@ -21,13 +21,17 @@ Executable chunk
 #    libcryptokit-ocaml-dev
 #    libounit-ocaml-dev
 #    libuuidm-ocaml-dev
+#    libxml-light-ocaml-dev
+#    libzip-ocaml-dev
 # Oasis is only in Debian 'testing' at the time.  It appears to be in Oneric.
+# Apparently we also need
+#    libfindlib-ocaml-dev
 
 Executable test
   Path: .
   BuildTools: ocamlbuild
   MainIs: test.ml
-  BuildDepends: cryptokit, zip, batteries, oUnit, uuidm
+  BuildDepends: cryptokit, zip, batteries, oUnit, uuidm, xml-light
   CompiledObject: native
   NativeOpt: -S
 

@@ -6,6 +6,8 @@ object
   method find : Hash.t -> Chunk.t
   method find_option : Hash.t -> Chunk.t option
 
+  method get_backups : Hash.t list
+
   method flush : unit
   method close : unit
 end
