@@ -109,6 +109,8 @@ object
   method close : unit
 end
 
+type t = file_pool
+
 let open_file_pool path =
   ensure_directory path;
   let metadata = Filename.concat path "metadata" in
