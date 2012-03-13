@@ -46,32 +46,35 @@ let list path =
 
 let get_prop_hash name props = Hash.of_string (StringMap.find name props)
 
-let rec tree_walk pool hash =
+let rec tree_walk pool path hash =
   let node = Nodes.get pool hash in
   match node with
     | Nodes.BackupNode (time, props) ->
-      printf "back ->\n";
-      tree_walk pool (get_prop_hash "hash" props)
+      printf "back -> %s\n" path;
+      tree_walk pool path (get_prop_hash "hash" props)
     | Nodes.NodeNode (kind, props) ->
-      printf "node(%s)\n" kind;
-      if kind = "DIR" then
-	tree_walk pool (get_prop_hash "children" props)
+      if kind = "DIR" then begin
+	printf "Enter %04s %s\n" kind path;
+	tree_walk pool path (get_prop_hash "children" props);
+	printf "Leave %04s %s\n" kind path
+      end else
+	printf " Node %04s %s\n" kind path
     | Nodes.DirNode children ->
-      let each child hash =
-	printf "  child: '%s' %s\n" child (Hash.to_string hash);
-	tree_walk pool hash in
+      let each name hash =
+	let child_path = path ^ "/" ^ name in
+	tree_walk pool child_path hash in
       StringMap.iter each children
     | Nodes.NullNode -> printf "  NULL\n"
     | Nodes.IndirectNode (_, level, subs) ->
       printf "indirect %d\n" level;
-      Array.iter (tree_walk pool) subs
+      Array.iter (tree_walk pool path) subs
     | Nodes.OtherNode ->
       printf "????\n"
 
 let walk path root_hash =
   let pool = File_pool.open_file_pool path in
   let root_hash = Hash.of_string root_hash in
-  tree_walk pool root_hash
+  tree_walk pool "." root_hash
 
 let main () =
   match Sys.argv with
