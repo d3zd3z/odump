@@ -10,7 +10,7 @@ Executable odump
   Path:       .
   BuildTools: ocamlbuild
   MainIs:     odump.ml
-  BuildDepends: cryptokit, zip, batteries, uuidm, xml-light
+  BuildDepends: cryptokit, zip, batteries, uuidm, pxp
   CompiledObject: native
   NativeOpt: -S
 
@@ -20,8 +20,8 @@ Executable odump
 #    libbatteries-ocaml-dev
 #    libcryptokit-ocaml-dev
 #    libounit-ocaml-dev
+#    libpxp-ocaml-dev
 #    libuuidm-ocaml-dev
-#    libxml-light-ocaml-dev
 #    libzip-ocaml-dev
 # Oasis is only in Debian 'testing' at the time.  It appears to be in Oneric.
 # Apparently we also need
@@ -31,7 +31,7 @@ Executable test
   Path: .
   BuildTools: ocamlbuild
   MainIs: test.ml
-  BuildDepends: cryptokit, zip, batteries, oUnit, uuidm, xml-light
+  BuildDepends: cryptokit, zip, batteries, oUnit, uuidm, pxp
   CompiledObject: native
   NativeOpt: -S
 

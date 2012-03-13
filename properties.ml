@@ -29,28 +29,25 @@ let sun_properties_dtd = "\
 <!ATTLIST entry key CDATA #REQUIRED>\n\
 "
 
-(* Update an xmlparser to resolve the given dtd at the given url. *)
-let set_dtd_resolver pars url dtd_text =
-  let dtd = Dtd.parse_string dtd_text in
-  let checked = Dtd.check dtd in
-  let resolver name =
-    if name = url then checked
-    else raise (Xml.File_not_found name) in
-  XmlParser.resolve pars resolver
+let config = Pxp_types.default_config
+let spec = Pxp_tree_parser.default_spec
 
-(* Given XML whose children contain pcdata, put them into a string. *)
-let get_data xml =
-  let buf = Buffer.create 16 in
-  let each xml = Buffer.add_string buf **> Xml.pcdata xml in
-  Xml.iter each xml;
-  Buffer.contents buf
+let catalog =
+  new Pxp_reader.lookup_id_as_string
+    [ Pxp_types.System(sun_properties_url), sun_properties_dtd; ]
 
+let get_entry node =
+  match node#attribute "key" with
+    | Pxp_types.Value x -> x
+    | _ -> failwith "Invalid 'key' attribute in XML"
+
+let decode_properties doc =
+  let each map node = StringMap.add (get_entry node) node#data map in
+  let entries = Pxp_document.find_all_elements "entry" doc#root in
+  List.fold_left each StringMap.empty entries
+
+(* Fixenc may be necessary of not specified. *)
 let of_java_xml text =
-  let pars = XmlParser.make () in
-  set_dtd_resolver pars sun_properties_url sun_properties_dtd;
-  let single map xml =
-    match Xml.tag xml with
-	"comment" -> map
-      | "entry" -> StringMap.add (Xml.attrib xml "key") (get_data xml) map
-      | tag -> failwith **> sprintf "Unknown tag in property: '%s'" tag
-  in Xml.fold single StringMap.empty **> XmlParser.parse pars (XmlParser.SString text)
+  let source = Pxp_types.from_string ~alt:[catalog] text in
+  let doc = Pxp_tree_parser.parse_document_entity config source spec in
+  decode_properties doc
