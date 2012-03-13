@@ -186,6 +186,17 @@ object
   method enum = Enum.empty ()
 end
 
+(* Optimized comparison of a fixed hash to an 20-byte hash inside of an array. *)
+let compare_hash_to hash other base =
+  let rec loop i =
+    if i == 20 then 0
+    else
+      let c1 = hash.[i] and c2 = other.[base+i] in
+      if c1 > c2 then 1
+      else if c1 < c2 then -1
+      else loop (i+1)
+  in loop 0
+
 class loaded_index path file_size : simple_index =
 
   let (top, hashes, offsets, kind_map, kinds) = load_index path file_size in
@@ -198,8 +209,7 @@ class loaded_index path file_size : simple_index =
     let rec loop low high =
       if high < low then None else begin
 	let mid = low + ((high - low) / 2) in
-	(* TODO: Don't blit them out, make a compare that works within. *)
-	let comp = compare hash (String.sub hashes (20 * mid) 20) in
+	let comp = compare_hash_to hash hashes (20 * mid) in
 	if comp < 0 then loop low (mid - 1)
 	else if comp > 0 then loop (mid + 1) high
 	else Some mid
