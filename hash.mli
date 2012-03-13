@@ -15,3 +15,6 @@ val peek_byte: t -> int -> int
 
 (* To satisfy Batteries.Interfaces.OrderedType. *)
 val compare: t -> t -> int
+
+val null_hash: t
+(** An invalid hash (all zeros) *)

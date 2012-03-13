@@ -48,3 +48,5 @@ let pred = hash_change (-) '\xff'
 let compare = String.compare
 
 let peek_byte hash pos = Char.code hash.[pos]
+
+let null_hash = of_raw (String.make 20 '\x00')

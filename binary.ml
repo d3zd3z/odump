@@ -13,6 +13,10 @@ let get32le buf offset =
   let tmp = Int32.to_int tmp in
   if tmp > 0x3FFFFFFF then tmp - (1 lsl 31) else tmp
 
+let get16be buf offset =
+  let ch pos = Char.code buf.[offset + pos] in
+  ((ch 0) lsl 8) lor (ch 1)
+
 let put32le buf offset value =
   let put pos num = buf.[offset + pos] <- Char.chr (num land 255) in
   put 0 value;

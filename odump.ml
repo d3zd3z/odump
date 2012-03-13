@@ -44,9 +44,39 @@ let list path =
   let backups = List.sort ~cmp:(fun (_, a) (_, b) -> backup_compare a b) backups in
   List.iter (fun (hash, b) -> show_backup_node hash b) backups
 
+let get_prop_hash name props = Hash.of_string (StringMap.find name props)
+
+let rec tree_walk pool hash =
+  let node = Nodes.get pool hash in
+  match node with
+    | Nodes.BackupNode (time, props) ->
+      printf "back ->\n";
+      tree_walk pool (get_prop_hash "hash" props)
+    | Nodes.NodeNode (kind, props) ->
+      printf "node(%s)\n" kind;
+      if kind = "DIR" then
+	tree_walk pool (get_prop_hash "children" props)
+    | Nodes.DirNode children ->
+      let each child hash =
+	printf "  child: '%s' %s\n" child (Hash.to_string hash);
+	tree_walk pool hash in
+      StringMap.iter each children
+    | Nodes.NullNode -> printf "  NULL\n"
+    | Nodes.IndirectNode (_, level, subs) ->
+      printf "indirect %d\n" level;
+      Array.iter (tree_walk pool) subs
+    | Nodes.OtherNode ->
+      printf "????\n"
+
+let walk path root_hash =
+  let pool = File_pool.open_file_pool path in
+  let root_hash = Hash.of_string root_hash in
+  tree_walk pool root_hash
+
 let main () =
   match Sys.argv with
     | [| _; "list"; path |] -> list path
+    | [| _; "walk"; path; node |] -> walk path node
     | _ -> failwith "Incorrect usage"
 
 let _ = main ()
