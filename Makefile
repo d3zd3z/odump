@@ -3,29 +3,17 @@
 #SETUP = setup.ml
 #RUNSETUP = ocaml setup.ml
 
-SETUP = _build/setup.byte
-RUNSETUP = ./_build/setup.byte
+KIND = native
 
-all: setup.data $(SETUP) force
-	$(RUNSETUP) -build
+TARGETS = test.$(KIND) odump.$(KIND)
+all: .force
+	ocamlbuild $(TARGETS)
 
-test: all
-	$(RUNSETUP) -test
+test: .force
+	ocamlbuild $(TARGETS)
+	./_build/test.$(KIND)
 
-# This has to be run before we are able to compile setup.ml using ocamlbuild.
-setup.data: setup.ml
-	ocaml setup.ml -configure > setup.state
+clean: .force
+	ocamlbuild -clean
 
-setup.ml: _oasis
-	oasis setup
-
-_build/setup.byte: setup.ml setup.data
-	ocamlbuild setup.byte
-
-distclean: clean force
-	rm -f setup.data setup.log setup.ml _tags
-	rm -f myocamlbuild.ml setup.state
-clean: setup.data force
-	ocaml setup.ml -clean
-
-.PHONY: force
+.PHONY: .force

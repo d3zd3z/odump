@@ -1,0 +1,30 @@
+* Notes of things to do.
+
+** C bindings
+   Things that are either missing, or inadequate from the Unix or
+   other bindings in ocaml.
+
+   - [ ] readdir - need to return name/inode pairs
+   - [ ] lstat - return finer grained time
+   - [ ] open  - be able to pass in NOATIME flag to open
+
+** Tasks to get minimal functionality
+
+   - [ ] restore
+   - [ ] seen-db conversions
+   - [ ] backup
+
+** Tasks to be comparable to jpool
+
+   - [ ] general logger
+   - [ ] progress meter (can be improved)
+   - [ ] clone command
+
+** Tasks to extend functionality
+
+   - [ ] Size scanning
+   - [ ] Tree comparisons
+
+** Misc things (cleanups etc)
+
+   - [ ] Build source as library and two executables that use it.

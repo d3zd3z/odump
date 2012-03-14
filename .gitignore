@@ -1,11 +1,4 @@
 _build/
-_tags
-_tags.bak
-myocamlbuild.ml
-setup.ml
-setup.data
-setup.log
-setup.state
 
 # Ignore the links to build versions
 *.native
