@@ -40,8 +40,7 @@ let extract_indirect data =
   done;
   result
 
-let get pool hash =
-  let chunk = pool#find hash in
+let decode_node chunk =
   match chunk#kind with
     | "back" ->
       let props = Properties.of_java_xml chunk#data in
@@ -62,3 +61,52 @@ let get pool hash =
     | kind ->
       Pdump.pdump chunk#data;
       failwith **> sprintf "Unknown node kind: '%s'" kind
+
+let get pool hash =
+  let chunk = pool#find hash in
+  decode_node chunk
+
+let get_prop_hash name props = Hash.of_string (StringMap.find name props)
+
+class type visitor =
+object
+  method want_full_data : bool
+  method data_summary : string -> Chunk.info -> unit
+  method enter : string -> node -> unit
+  method leave : string -> node -> unit
+end
+class virtual empty_visitor : visitor =
+object
+  method want_full_data = true
+  method data_summary _ _ = ()
+  method enter _ _ = ()
+  method leave _ _ = ()
+end
+
+let walk (pool : File_pool.t) path hash (visitor : visitor) =
+  let full_data = visitor#want_full_data in
+  let rec descend path hash =
+    let (chunk_get, info_get, kind) = Option.get (pool#find_full hash) in
+    if (not full_data) && kind == "data" then
+      visitor#data_summary path (info_get ())
+    else begin
+      let chunk = chunk_get () in
+      let node = decode_node chunk in
+      visitor#enter path node;
+      begin match node with
+	| BackupNode (time, props) ->
+	  descend path (get_prop_hash "hash" props)
+	| NodeNode (kind, props) when kind = "DIR" ->
+	  descend path (get_prop_hash "children" props)
+	| DirNode children ->
+	  let each name hash =
+	    let child_path = Filename.concat path name in
+	    descend child_path hash in
+	  StringMap.iter each children
+	| IndirectNode (_, level, subs) ->
+	  Array.iter (descend path) subs
+	| _ -> ()
+      end;
+      visitor#leave path node
+    end
+  in descend path hash

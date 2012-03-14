@@ -103,6 +103,8 @@ object
   method find : Hash.t -> Chunk.t
   method find_option : Hash.t -> Chunk.t option
 
+  method find_full : Hash.t -> ((unit -> Chunk.t) * (unit -> Chunk.info) * string) option
+
   method get_backups : Hash.t list
 
   method flush : unit
@@ -151,11 +153,17 @@ object (self)
     index#add chunk#hash pos chunk#kind;
     dirty <- true
 
-  method find_option hash =
+  method find_full hash =
     let lookup node =
       let info = node.n_index#find_option hash in
-      Option.map (fun (pos, _) -> node.n_file#read pos) info in
+      Option.map (fun (pos, kind) ->
+	((fun () -> node.n_file#read pos),
+	 (fun () -> node.n_file#read_info pos),
+	 kind)) info in
     List.Exceptionless.find_map lookup nodes
+
+  method find_option hash =
+    Option.map (fun (chunk, _, _) -> chunk ()) (self#find_full hash)
 
   method find hash = Option.get **> self#find_option hash
 

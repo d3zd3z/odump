@@ -14,6 +14,7 @@
 
 ** Tasks to get minimal functionality
 
+   - [X] Generic walker code
    - [ ] restore
    - [ ] seen-db conversions
    - [ ] backup
