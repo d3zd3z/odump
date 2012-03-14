@@ -34,3 +34,68 @@
 
    - [ ] Build source as library and two executables that use it.
    - [ ] Properly close/cleanup pools
+   - [ ] Allow #enter on traveral to abort the traversal (maybe there
+     isn't anything to do here, since raising an exception might just
+     work).
+   - [ ] Better control over when hashes are verified.  Normally, we
+     probably only want to verify them when explicitly asked to, or
+     perhaps when restoring.
+
+*** Traversal structures
+
+    The 'du' command as well as various garbage collection algorithms
+    need to keep track of which nodes have been visited.  Storing
+    hashes redundantly takes a lot of memory.
+
+    Since we already have all of the hashes stored, anyway, and
+    existing files never grow, we can enumerate all of the hashes
+    (based on the offset with in each file).  This would have to be
+    added to the pool code as mapping that would be specific to the
+    local pool.
+
+    - [ ] Hash indices for traversal
+
+    For du and comparison between trees, we probably want a cache of
+    each directory and information about it's size.  This might be
+    best stored in a local database.
+
+* Things beyond the backup itself
+
+  - [ ] Manage BTR snapshots
+  - [ ] Scheduling and other stuff that I have in scripts now
+
+* Size statistics from my backups:
+
+f08156fb0c8c5365eb99c6f3d565ec5fc91a8a5b 2012-02-12 23:14 fs=@boot host=a64 kind=snapshot
+
+kind          data size                  compressed size        count
+---- ---------------------------   ---------------------------  -----
+back             108 ( 108.0B  )               160 ( 160.0B  )  (1)
+blob       110048746 ( 105.0MiB)          97991168 (  93.5MiB)  (650)
+dir             8647 (   8.4Kib)              7392 (   7.2Kib)  (3)
+ind0            8400 (   8.2Kib)              9552 (   9.3Kib)  (22)
+node           43473 (  42.5Kib)             49664 (  48.5Kib)  (258)
+null               0 (   0.0B  )                48 (  48.0B  )  (1)
+
+f092dbb8a7af0a08d5a19f36be8cbdf458fb22c9 2012-02-12 23:15 fs=@root host=a64 kind=snapshot
+
+kind       data size               compressed size              count
+---- --------------- -----------   --------------- -----------  -----
+back             108 ( 108.0B  )               160 ( 160.0B  )  (1)
+blob      8972019468 (   8.4GiB)        3165819360 (   2.9GiB)  (235237)
+dir         11283714 (  10.8MiB)          11545616 (  11.0MiB)  (34648)
+dir0              80 (  80.0B  )               192 ( 192.0B  )  (2)
+ind0          512620 ( 500.6Kib)            671424 ( 655.7Kib)  (3370)
+node        56257141 (  53.7MiB)          64219184 (  61.2MiB)  (328528)
+null               0 (   0.0B  )                48 (  48.0B  )  (1)
+
+50926640b843a312b62a4aa262dde100bdd82398 2012-02-12 23:21 fs=@home host=a64 kind=snapshot
+
+kind          data size                  compressed size        count
+---- ---------------------------   ---------------------------  -----
+back             108 ( 108.0B  )               160 ( 160.0B  )  (1)
+blob     19229770720 (  17.9GiB)       10862134016 (  10.1GiB)  (459719)
+dir         21469020 (  20.5MiB)          22016896 (  21.0MiB)  (72205)
+ind0         1213440 (   1.2MiB)           1316432 (   1.3MiB)  (4606)
+node       101123886 (  96.4MiB)         116917936 ( 111.5MiB)  (571050)
+null               0 (   0.0B  )                48 (  48.0B  )  (1)

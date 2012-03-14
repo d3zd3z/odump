@@ -139,8 +139,10 @@ object (self)
     pos
 end
 
-class plain_chunk kind data =
-  let hash = lazy (Hash.of_data [kind; data]) in
+class plain_chunk kind maybe_hash data =
+  let hash = lazy (match maybe_hash with
+    | None -> Hash.of_data [kind; data]
+    | Some h -> h) in
   let zdata = lazy (compress data) in
 object
   inherit base_chunk
@@ -151,9 +153,11 @@ object
   method kind = kind
 end
 
-class compressed_chunk kind zdata data_length =
+class compressed_chunk kind maybe_hash zdata data_length =
   let data = lazy (uncompress zdata data_length) in
-  let hash = lazy (Hash.of_data [kind; Lazy.force data]) in
+  let hash = lazy (match maybe_hash with
+    | None -> Hash.of_data [kind; Lazy.force data]
+    | Some h -> h) in
 object
   inherit base_chunk
   method hash = Lazy.force hash
@@ -163,7 +167,7 @@ object
   method kind = kind
 end
 
-let chunk_of_string kind data = new plain_chunk kind data
+let chunk_of_string kind data = new plain_chunk kind None data
 
 type info = {
   in_hash: Hash.t;
@@ -193,10 +197,12 @@ let read chan =
   let header = get_header chan in
   let data = read_buffer chan header.h_clen in
   let chunk = if header.h_len = -1 then
-    new plain_chunk header.h_kind data
+    new plain_chunk header.h_kind (Some header.h_hash) data
   else
-    new compressed_chunk header.h_kind data header.h_len in
-  if true then begin
+    new compressed_chunk header.h_kind (Some header.h_hash) data header.h_len in
+  (* Verify needs to check the hash manually, since we're always
+     storing the read one in the chunk. *)
+  if false then begin
     (* Verify the hash. *)
     if header.h_hash <> chunk#hash then failwith "Incorrect SHA1 reading chunk"
   end;
