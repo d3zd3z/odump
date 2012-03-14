@@ -6,7 +6,7 @@
 
    - [X] readdir - need to return name/inode pairs
    - [X] lstat - return finer grained time and more int64s
-   - [ ] open  - be able to pass in NOATIME flag to open
+   - [X] open  - be able to pass in NOATIME flag to open
    - [ ] utimensat - Set time, accurately, and not following
    - [ ] mknod
    - [ ] lchown  - exist

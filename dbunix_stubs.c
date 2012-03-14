@@ -1,5 +1,8 @@
 /* stubs. */
 
+#define _FILE_OFFSET_BITS 64
+#define _GNU_SOURCE
+
 #include <caml/alloc.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
@@ -8,6 +11,7 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -109,4 +113,22 @@ CAMLprim value db_lstat(value path)
 	Store_field(pair, 1, list);
 
 	CAMLreturn(pair);
+}
+
+/* Open for reading.  This is a bit special because of the lack of
+ * O_NOATIME in the ocaml binding. */
+CAMLprim value db_open_for_read(value path)
+{
+	CAMLparam1(path);
+	/* Assume only called on real files, so the path doesn't need
+	 * to be copied. */
+	int fd = open(String_val(path), O_RDONLY | O_NOATIME);
+	/* Non-root users aren't permitted to open without changing
+	 * atime on files they don't own.  If this happens, try
+	 * opening the normal way. */
+	if (fd < 0 && errno == EPERM)
+		fd = open(String_val(path), O_RDONLY);
+	if (fd < 0)
+		uerror("open_for_read", path);
+	CAMLreturn (Val_int(fd));
 }
