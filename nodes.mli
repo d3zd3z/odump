@@ -12,6 +12,7 @@ type node =
   | DirNode of Hash.t Map.StringMap.t
   | IndirectNode of indirect_kind * int * Hash.t array
   | NullNode
+  | BlobNode of string
   | OtherNode
 
 val get : File_pool.t -> Hash.t -> node
@@ -21,8 +22,8 @@ class type visitor =
 object
   method want_full_data : bool
   method data_summary : string -> Chunk.info -> unit
-  method enter : string -> node -> unit
-  method leave : string -> node -> unit
+  method enter : string -> Chunk.t -> node -> unit
+  method leave : string -> Chunk.t -> node -> unit
 end
 
 (** A visitor that doesn't do anything.  Useful to inherit from to

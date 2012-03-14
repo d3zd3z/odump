@@ -27,9 +27,10 @@
 
 ** Tasks to extend functionality
 
-   - [ ] Size scanning
+   - [X] Simple size scanning
    - [ ] Tree comparisons
 
 ** Misc things (cleanups etc)
 
    - [ ] Build source as library and two executables that use it.
+   - [ ] Properly close/cleanup pools

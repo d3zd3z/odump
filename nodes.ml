@@ -15,6 +15,7 @@ type node =
   | DirNode of Hash.t Map.StringMap.t
   | IndirectNode of indirect_kind * int * Hash.t array
   | NullNode
+  | BlobNode of string
   | OtherNode
 
 let extract_dir data =
@@ -52,12 +53,20 @@ let decode_node chunk =
       NodeNode (name, props)
     | "dir " ->
       DirNode (extract_dir chunk#data)
+
+    (* TODO: These can be done in a simpler way. *)
     | "dir0" -> IndirectNode (Dir_Indirect, 0, extract_indirect chunk#data)
     | "dir1" -> IndirectNode (Dir_Indirect, 1, extract_indirect chunk#data)
     | "dir2" -> IndirectNode (Dir_Indirect, 2, extract_indirect chunk#data)
     | "dir3" -> IndirectNode (Dir_Indirect, 3, extract_indirect chunk#data)
     | "dir4" -> IndirectNode (Dir_Indirect, 4, extract_indirect chunk#data)
+    | "ind0" -> IndirectNode (Dir_Indirect, 0, extract_indirect chunk#data)
+    | "ind1" -> IndirectNode (Dir_Indirect, 1, extract_indirect chunk#data)
+    | "ind2" -> IndirectNode (Dir_Indirect, 2, extract_indirect chunk#data)
+    | "ind3" -> IndirectNode (Dir_Indirect, 3, extract_indirect chunk#data)
+    | "ind4" -> IndirectNode (Dir_Indirect, 4, extract_indirect chunk#data)
     | "null" -> NullNode
+    | "blob" -> BlobNode (chunk#data)
     | kind ->
       Pdump.pdump chunk#data;
       failwith **> sprintf "Unknown node kind: '%s'" kind
@@ -72,32 +81,34 @@ class type visitor =
 object
   method want_full_data : bool
   method data_summary : string -> Chunk.info -> unit
-  method enter : string -> node -> unit
-  method leave : string -> node -> unit
+  method enter : string -> Chunk.t -> node -> unit
+  method leave : string -> Chunk.t -> node -> unit
 end
 class virtual empty_visitor : visitor =
 object
   method want_full_data = true
   method data_summary _ _ = ()
-  method enter _ _ = ()
-  method leave _ _ = ()
+  method enter _ _ _ = ()
+  method leave _ _ _ = ()
 end
 
 let walk (pool : File_pool.t) path hash (visitor : visitor) =
   let full_data = visitor#want_full_data in
   let rec descend path hash =
     let (chunk_get, info_get, kind) = Option.get (pool#find_full hash) in
-    if (not full_data) && kind == "data" then
+    if (not full_data) && kind == "blob" then
       visitor#data_summary path (info_get ())
     else begin
       let chunk = chunk_get () in
       let node = decode_node chunk in
-      visitor#enter path node;
+      visitor#enter path chunk node;
       begin match node with
 	| BackupNode (time, props) ->
 	  descend path (get_prop_hash "hash" props)
 	| NodeNode (kind, props) when kind = "DIR" ->
 	  descend path (get_prop_hash "children" props)
+	| NodeNode (kind, props) when kind = "REG" ->
+	  descend path (get_prop_hash "data" props)
 	| DirNode children ->
 	  let each name hash =
 	    let child_path = Filename.concat path name in
@@ -107,6 +118,6 @@ let walk (pool : File_pool.t) path hash (visitor : visitor) =
 	  Array.iter (descend path) subs
 	| _ -> ()
       end;
-      visitor#leave path node
+      visitor#leave path chunk node
     end
   in descend path hash

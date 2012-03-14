@@ -60,7 +60,7 @@ object
   inherit Nodes.empty_visitor
 
   method! want_full_data = false
-  method! enter path node = tree_show path node
+  method! enter path _ node = tree_show path node
 end
 
 let walk path root_hash =
@@ -69,10 +69,87 @@ let walk path root_hash =
   (* tree_walk pool "." root_hash *)
   Nodes.walk pool "." root_hash (new walk_visitor)
 
+module HashSet = Set.Make(Hash)
+
+type du_type = {
+  du_data: int64;
+  du_write: int64;
+  du_count: int64;
+}
+let empty_du = { du_data = 0L; du_write = 0L; du_count = 0L }
+
+let update_du_data data write count du =
+  { du_data = Int64.add du.du_data (Int64.of_int data);
+    du_write = Int64.add du.du_write (Int64.of_int write);
+    du_count = Int64.add du.du_count (Int64.of_int count) }
+
+(* Units for nicely printing sizes.  YiB would take 70 bits, so cannot
+   be reached by a 64-bit number. *)
+let units = ["B"; "Kib"; "MiB"; "GiB"; "TiB"; "PiB"; "EiB"; "ZiB"; "YiB"]
+let nice_number num =
+  let num = Int64.to_float num in
+  let rec loop num units =
+    if abs_float num > 1024.0 then loop (num /. 1024.0) (List.tl units)
+    else (num, List.hd units) in
+  let (num, unit) = loop num units in
+  sprintf "%6.1f%-3s" num unit
+
+class du_visitor =
+object (self)
+  inherit Nodes.empty_visitor
+
+  val mutable sizes = StringMap.empty
+
+  (* This isn't very efficient, but without doing this, we won't know
+     we've visited a node, and will count the write size multiple
+     times. *)
+  val mutable seen = HashSet.empty
+
+  method private update hash kind size write_size =
+    let (write, count) = if HashSet.mem hash seen then (0, 0) else begin
+      seen <- HashSet.add hash seen;
+      (write_size, 1)
+    end in
+    sizes <- StringMap.modify_def empty_du kind (update_du_data size write count) sizes
+
+  method! enter _ chunk _ =
+    self#update chunk#hash chunk#kind chunk#data_length chunk#write_size
+
+  method! data_summary _ info =
+    self#update info.Chunk.in_hash
+      info.Chunk.in_kind
+      info.Chunk.in_data_length
+      info.Chunk.in_write_size
+
+  method show_result pool hash =
+    let node = Nodes.get pool hash in
+    (* printf "backup: %s\n" (Hash.to_string hash); *)
+    show_backup_node hash node;
+    printf "\n";
+    printf "kind          data size                  compressed size        count\n";
+    printf "---- ---------------------------   ---------------------------  -----\n";
+    let each kind info =
+      printf "%4s %15Ld (%s)   %15Ld (%s)  (%Ld)\n"
+	kind
+	info.du_data (nice_number info.du_data)
+	info.du_write (nice_number info.du_write)
+	info.du_count in
+    StringMap.iter each sizes;
+    printf "\n"
+end
+
+let du path root_hash =
+  let pool = File_pool.open_file_pool path in
+  let root_hash = Hash.of_string root_hash in
+  let visitor = new du_visitor in
+  Nodes.walk pool "." root_hash (visitor :> Nodes.visitor);
+  visitor#show_result pool root_hash
+
 let main () =
   match Sys.argv with
     | [| _; "list"; path |] -> list path
     | [| _; "walk"; path; node |] -> walk path node
+    | [| _; "du"; path; node |] -> du path node
     | _ -> failwith "Incorrect usage"
 
 let _ = main ()
