@@ -77,6 +77,8 @@ let get pool hash =
 
 let get_prop_hash name props = Hash.of_string (StringMap.find name props)
 
+exception Prune
+
 class type visitor =
 object
   method want_full_data : bool
@@ -101,22 +103,27 @@ let walk (pool : File_pool.t) path hash (visitor : visitor) =
     else begin
       let chunk = chunk_get () in
       let node = decode_node chunk in
-      visitor#enter path chunk node;
-      begin match node with
-	| BackupNode (time, props) ->
-	  descend path (get_prop_hash "hash" props)
-	| NodeNode (kind, props) when kind = "DIR" ->
-	  descend path (get_prop_hash "children" props)
-	| NodeNode (kind, props) when kind = "REG" ->
-	  descend path (get_prop_hash "data" props)
-	| DirNode children ->
-	  let each name hash =
-	    let child_path = Filename.concat path name in
-	    descend child_path hash in
-	  StringMap.iter each children
-	| IndirectNode (_, level, subs) ->
-	  Array.iter (descend path) subs
-	| _ -> ()
+      begin
+	try
+	  visitor#enter path chunk node;
+	  begin match node with
+	    | BackupNode (time, props) ->
+	      descend path (get_prop_hash "hash" props)
+	    | NodeNode (kind, props) when kind = "DIR" ->
+	      descend path (get_prop_hash "children" props)
+	    | NodeNode (kind, props) when kind = "REG" ->
+	      descend path (get_prop_hash "data" props)
+	    | DirNode children ->
+	      let each name hash =
+		let child_path = Filename.concat path name in
+		descend child_path hash in
+	      StringMap.iter each children
+	    | IndirectNode (_, level, subs) ->
+	      Array.iter (descend path) subs
+	    | _ -> ()
+	  end
+	with
+	  | Prune -> ()
       end;
       visitor#leave path chunk node
     end

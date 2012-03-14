@@ -17,6 +17,8 @@ type node =
 
 val get : File_pool.t -> Hash.t -> node
 
+exception Prune
+
 (** The [visitor] handles the traversal. *)
 class type visitor =
 object

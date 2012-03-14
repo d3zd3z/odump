@@ -60,7 +60,11 @@ object
   inherit Nodes.empty_visitor
 
   method! want_full_data = false
-  method! enter path _ node = tree_show path node
+  method! enter path _ node =
+    tree_show path node;
+    match node with
+      | Nodes.NodeNode("REG", _) -> raise Nodes.Prune
+      | _ -> ()
 end
 
 let walk path root_hash =
