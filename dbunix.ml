@@ -3,6 +3,7 @@ type dir_handle = Unix.dir_handle
 let opendir = Unix.opendir
 external readdir : dir_handle -> (string * int64) = "db_readdir"
 let closedir = Unix.closedir
+external lstat : string -> (string * (string * string) list) = "db_lstat"
 
 let get_directory_contents path =
   let hand = opendir path in

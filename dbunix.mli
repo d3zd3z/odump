@@ -7,3 +7,5 @@ val closedir : dir_handle -> unit
 
 (* Convenience utility *)
 val get_directory_contents : string -> (string * int64) list
+
+val lstat : string -> (string * (string * string) list)

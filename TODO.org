@@ -5,8 +5,12 @@
    other bindings in ocaml.
 
    - [X] readdir - need to return name/inode pairs
-   - [ ] lstat - return finer grained time
+   - [X] lstat - return finer grained time and more int64s
    - [ ] open  - be able to pass in NOATIME flag to open
+   - [ ] utimensat - Set time, accurately, and not following
+   - [ ] mknod
+   - [ ] lchown  - exist
+   - [ ] read/write that don't copy (later?)  will block the GC
 
 ** Tasks to get minimal functionality
 
