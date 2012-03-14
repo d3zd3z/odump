@@ -3,3 +3,7 @@
 # Enable this to get camlp4of.
 # TODO: Figure out how to pull in other extensions.
 # <*.ml> or <*.mli>: camlp4of
+
+# Use the native library.
+<*.byte>: custom
+<*.{native,byte}>: use_dbunix

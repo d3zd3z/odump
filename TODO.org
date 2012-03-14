@@ -4,7 +4,7 @@
    Things that are either missing, or inadequate from the Unix or
    other bindings in ocaml.
 
-   - [ ] readdir - need to return name/inode pairs
+   - [X] readdir - need to return name/inode pairs
    - [ ] lstat - return finer grained time
    - [ ] open  - be able to pass in NOATIME flag to open
 

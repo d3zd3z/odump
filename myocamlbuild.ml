@@ -12,5 +12,6 @@ let _ = dispatch begin function
     (* Keep sources around. *)
     flag ["ocaml"; "compile"; "native"] (S[A "-S"]);
 
+    dep ["link"; "ocaml"; "use_dbunix"] ["libdbunix.a"];
   | _ -> ()
 end
