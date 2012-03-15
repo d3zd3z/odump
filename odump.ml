@@ -149,11 +149,17 @@ let du path root_hash =
     Nodes.walk pool "." root_hash (visitor :> Nodes.visitor);
     visitor#show_result pool root_hash)
 
+let restore path node dest =
+  let node = Hash.of_string node in
+  File_pool.with_file_pool path (fun pool ->
+    Restore.run_restore pool node dest)
+
 let main () =
   match Sys.argv with
     | [| _; "list"; path |] -> list path
     | [| _; "walk"; path; node |] -> walk path node
     | [| _; "du"; path; node |] -> du path node
+    | [| _; "restore"; path; node; dest |] -> restore path node dest
     | _ -> failwith "Incorrect usage"
 
 let _ = main ()
