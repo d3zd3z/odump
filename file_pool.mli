@@ -24,3 +24,5 @@ type t = file_pool
 
 val create_file_pool : ?limit:int -> ?newfile:bool -> string -> unit
 val open_file_pool : string -> file_pool
+
+val with_file_pool : string -> (file_pool -> 'a) -> 'a

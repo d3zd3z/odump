@@ -37,12 +37,12 @@ let backup_compare a b = match (a, b) with
   | _ -> failwith "Attempt to sort non-backup nodes"
 
 let list path =
-  let pool = File_pool.open_file_pool path in
-  let backups = pool#get_backups in
-  let get hash = (hash, Nodes.get pool hash) in
-  let backups = List.map get backups in
-  let backups = List.sort ~cmp:(fun (_, a) (_, b) -> backup_compare a b) backups in
-  List.iter (fun (hash, b) -> show_backup_node hash b) backups
+  File_pool.with_file_pool path (fun pool ->
+    let backups = pool#get_backups in
+    let get hash = (hash, Nodes.get pool hash) in
+    let backups = List.map get backups in
+    let backups = List.sort ~cmp:(fun (_, a) (_, b) -> backup_compare a b) backups in
+    List.iter (fun (hash, b) -> show_backup_node hash b) backups)
 
 let tree_show path node =
   match node with
@@ -68,10 +68,10 @@ object
 end
 
 let walk path root_hash =
-  let pool = File_pool.open_file_pool path in
-  let root_hash = Hash.of_string root_hash in
-  (* tree_walk pool "." root_hash *)
-  Nodes.walk pool "." root_hash (new walk_visitor)
+  File_pool.with_file_pool path (fun pool ->
+    let root_hash = Hash.of_string root_hash in
+    (* tree_walk pool "." root_hash *)
+    Nodes.walk pool "." root_hash (new walk_visitor))
 
 module HashSet = Set.Make(Hash)
 
@@ -143,11 +143,11 @@ object (self)
 end
 
 let du path root_hash =
-  let pool = File_pool.open_file_pool path in
   let root_hash = Hash.of_string root_hash in
-  let visitor = new du_visitor in
-  Nodes.walk pool "." root_hash (visitor :> Nodes.visitor);
-  visitor#show_result pool root_hash
+  File_pool.with_file_pool path (fun pool ->
+    let visitor = new du_visitor in
+    Nodes.walk pool "." root_hash (visitor :> Nodes.visitor);
+    visitor#show_result pool root_hash)
 
 let main () =
   match Sys.argv with

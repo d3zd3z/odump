@@ -195,3 +195,7 @@ object (self)
 	Sys_error _ -> []
     
 end
+
+let with_file_pool path f =
+  with_dispose ~dispose:(fun x -> x#close) f
+    (open_file_pool path)

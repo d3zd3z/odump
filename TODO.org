@@ -33,7 +33,7 @@
 ** Misc things (cleanups etc)
 
    - [ ] Build source as library and two executables that use it.
-   - [ ] Properly close/cleanup pools
+   - [X] Properly close/cleanup pools
    - [ ] Allow #enter on traveral to abort the traversal (maybe there
      isn't anything to do here, since raising an exception might just
      work).
@@ -98,4 +98,17 @@ blob     19229770720 (  17.9GiB)       10862134016 (  10.1GiB)  (459719)
 dir         21469020 (  20.5MiB)          22016896 (  21.0MiB)  (72205)
 ind0         1213440 (   1.2MiB)           1316432 (   1.3MiB)  (4606)
 node       101123886 (  96.4MiB)         116917936 ( 111.5MiB)  (571050)
+null               0 (   0.0B  )                48 (  48.0B  )  (1)
+
+(actually huya)
+b9fbb3cc5f71e75c4d8cd7ed5c14f5e5cdfd69bc 2012-02-13 10:13 fs=@home host=a64 kind=snapshot
+
+kind          data size                  compressed size        count
+---- ---------------------------   ---------------------------  -----
+back             108 ( 108.0B  )               160 ( 160.0B  )  (1)
+blob     26698648904 (  24.9GiB)       10711035744 (  10.0GiB)  (341957)
+dir         22060871 (  21.0MiB)          23819568 (  22.7MiB)  (83717)
+dir0              40 (  40.0B  )                96 (  96.0B  )  (1)
+ind0         1668800 (   1.6MiB)           1542416 (   1.5MiB)  (5046)
+node       115694353 ( 110.3MiB)         118871648 ( 113.4MiB)  (586899)
 null               0 (   0.0B  )                48 (  48.0B  )  (1)
