@@ -6,15 +6,6 @@ open Printf
 
 module StringMap = Map.StringMap
 
-let ensure_directory path =
-  if not (Sys.is_directory path) then
-    failwith (Printf.sprintf "Pool pathname is not a directory: %s" path)
-
-let ensure_empty_directory path =
-  ensure_directory path;
-  if Sys.readdir path <> [| |] then
-    failwith (Printf.sprintf "Cannot create pool in non-empty directory: %s" path)
-
 let default_limit = 640 * 1024 * 1024
 let limit_lower_bound = 1 lsl 20
 let limit_upper_bound = 1 lsl 30 - 1 (* To avoid using LargeFile IO *)
@@ -27,7 +18,7 @@ let get_uuid () = Uuidm.to_string (Uuidm.create `V4)
 let create_file_pool ?(limit=default_limit) ?(newfile=false) path =
   if limit < limit_lower_bound || limit > limit_upper_bound then
     failwith "Pool size limit out of range";
-  ensure_empty_directory path;
+  Misc.ensure_empty_directory ~what:"pool" path;
   let metadata = Filename.concat path "metadata" in
   let props_name = Filename.concat metadata "props.txt" in
   let uuid = get_uuid () in
@@ -114,7 +105,7 @@ end
 type t = file_pool
 
 let open_file_pool path =
-  ensure_directory path;
+  Misc.ensure_directory ~what:"pool" path;
   let metadata = Filename.concat path "metadata" in
   let props_name = Filename.concat metadata "props.txt" in
 
