@@ -98,7 +98,7 @@ let nice_number num =
   let (num, unit) = loop num units in
   sprintf "%6.1f%-3s" num unit
 
-class du_visitor =
+class du_visitor pool =
 object (self)
   inherit Nodes.empty_visitor
 
@@ -107,11 +107,12 @@ object (self)
   (* This isn't very efficient, but without doing this, we won't know
      we've visited a node, and will count the write size multiple
      times. *)
-  val mutable seen = HashSet.empty
+  val mutable seen = ISet.empty
 
   method private update hash kind size write_size =
-    let (write, count) = if HashSet.mem hash seen then (0, 0) else begin
-      seen <- HashSet.add hash seen;
+    let index = pool#find_index hash in
+    let (write, count) = if ISet.mem index seen then (0, 0) else begin
+      seen <- ISet.add index seen;
       (write_size, 1)
     end in
     sizes <- StringMap.modify_def empty_du kind (update_du_data size write count) sizes
@@ -145,7 +146,7 @@ end
 let du path root_hash =
   let root_hash = Hash.of_string root_hash in
   File_pool.with_file_pool path (fun pool ->
-    let visitor = new du_visitor in
+    let visitor = new du_visitor pool in
     Nodes.walk pool "." root_hash (visitor :> Nodes.visitor);
     visitor#show_result pool root_hash)
 
