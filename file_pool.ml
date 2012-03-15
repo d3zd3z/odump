@@ -95,6 +95,7 @@ object
   method find_option : Hash.t -> Chunk.t option
 
   method find_full : Hash.t -> ((unit -> Chunk.t) * (unit -> Chunk.info) * string) option
+  method find_index : Hash.t -> int
 
   method get_backups : Hash.t list
 
@@ -163,13 +164,26 @@ object (self)
   (* 	[] -> () *)
   (*     | ({ n_file=file} :: _ ) -> file#flush *)
 
+  method find_index hash =
+    (* Start with the oldest ones, since those shouldn't ever change.
+       The index will be based on the sizes from each. *)
+    let rec loop offset nodes =
+      match nodes with
+	| [] -> raise Not_found
+	| ({ n_index=index }) :: rest ->
+	  begin match index#find_offset hash with
+	    | None -> loop (offset + index#count) rest
+	    | Some pos -> offset + pos
+	  end in
+    loop 0 nodes
+
   method flush =
     if dirty then begin
-    match nodes with
-	[] -> ()
-      | ({ n_file=file; n_index=index } :: _) ->
-	file#flush;
-	index#save file#size
+      match nodes with
+	  [] -> ()
+	| ({ n_file=file; n_index=index } :: _) ->
+	  file#flush;
+	  index#save file#size
     end;
     dirty <- false
 
@@ -184,7 +198,6 @@ object (self)
       with_dispose ~dispose:close_in get (open_in backups_name)
     with
 	Sys_error _ -> []
-    
 end
 
 let with_file_pool path f =

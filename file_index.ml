@@ -18,6 +18,8 @@ object
   method mem: Hash.t -> bool
   method find_option: Hash.t -> (int * string) option
   method find: Hash.t -> (int * string)
+  method find_offset: Hash.t -> int option
+  method count: int
 
   method load: int -> unit
   method save: int -> unit
@@ -177,13 +179,17 @@ let load_index path file_size =
 class type simple_index =
 object
   method find : Hash.t -> (int * string) option
+  method find_offset : Hash.t -> int option
   method enum : (Hash.t * (int * string)) Enum.t
+  method count : int
 end
 
 class empty_index : simple_index =
 object
   method find _ = None
+  method find_offset _ = None
   method enum = Enum.empty ()
+  method count = 0
 end
 
 (* Optimized comparison of a fixed hash to an 20-byte hash inside of an array. *)
@@ -223,9 +229,13 @@ object (self)
       None -> None
     | Some pos -> Some (offsets.(pos), get_kind pos)
 
+  method find_offset hash = search hash
+
   method enum =
     let get idx = (Hash.of_raw (String.sub hashes (20 * idx) 20), (offsets.(idx), get_kind idx)) in
     Enum.map get (0 --^ top.(255))
+
+  method count = top.(255)
 end
 
 (* BatEnum.merge seems to be broken, let's try a possibly less
@@ -282,6 +292,12 @@ object (self)
   method clear =
     ram <- HashMap.empty;
     file <- new empty_index
+
+  method count = file#count
+  (* The count only returns the size of the file data, since
+     non-flushed entities shouldn't be used. *)
+
+  method find_offset hash = file#find_offset hash
 end
 
 let make = new combined_file_index

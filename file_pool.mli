@@ -14,6 +14,14 @@ object
       not be called when another thread might be executing pool
       code. *)
 
+  method find_index : Hash.t -> int
+  (** [#find_index hash] returns a small integer that is uniquely
+      associated with the specified hash.  If the hash is not found,
+      raises [Not_found].  These results are only meaningful for a
+      given pool until it has data written to it.  Once there is data
+      written, the values returned for a given hash are subject to
+      change. *)
+
   method get_backups : Hash.t list
 
   method flush : unit
