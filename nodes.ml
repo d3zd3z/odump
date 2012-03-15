@@ -41,6 +41,10 @@ let extract_indirect data =
   done;
   result
 
+let decode_indirect kind ind chunk =
+  let level = Char.code kind.[3] - Char.code '0' in
+  IndirectNode (ind, level, extract_indirect chunk#data)
+
 let decode_node chunk =
   match chunk#kind with
     | "back" ->
@@ -54,17 +58,12 @@ let decode_node chunk =
     | "dir " ->
       DirNode (extract_dir chunk#data)
 
-    (* TODO: These can be done in a simpler way. *)
-    | "dir0" -> IndirectNode (Dir_Indirect, 0, extract_indirect chunk#data)
-    | "dir1" -> IndirectNode (Dir_Indirect, 1, extract_indirect chunk#data)
-    | "dir2" -> IndirectNode (Dir_Indirect, 2, extract_indirect chunk#data)
-    | "dir3" -> IndirectNode (Dir_Indirect, 3, extract_indirect chunk#data)
-    | "dir4" -> IndirectNode (Dir_Indirect, 4, extract_indirect chunk#data)
-    | "ind0" -> IndirectNode (Dir_Indirect, 0, extract_indirect chunk#data)
-    | "ind1" -> IndirectNode (Dir_Indirect, 1, extract_indirect chunk#data)
-    | "ind2" -> IndirectNode (Dir_Indirect, 2, extract_indirect chunk#data)
-    | "ind3" -> IndirectNode (Dir_Indirect, 3, extract_indirect chunk#data)
-    | "ind4" -> IndirectNode (Dir_Indirect, 4, extract_indirect chunk#data)
+    (* Make sure this comes after "dir " so that it doesn't catch that. *)
+    | kind when String.starts_with kind "dir" ->
+      decode_indirect kind Dir_Indirect chunk
+    | kind when String.starts_with kind "ind" ->
+      decode_indirect kind Dir_Indirect chunk
+
     | "null" -> NullNode
     | "blob" -> BlobNode (chunk#data)
     | kind ->
