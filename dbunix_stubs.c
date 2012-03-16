@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -131,4 +132,51 @@ CAMLprim value db_open_for_read(value path)
 	if (fd < 0)
 		uerror("open_for_read", path);
 	CAMLreturn (Val_int(fd));
+}
+
+/* Set time, never follow symlinks. */
+CAMLprim value db_utimensat(value path, value mtime, value mtime_nsec)
+{
+	struct timespec times[2];
+	times[0].tv_sec = 0;
+	times[0].tv_nsec = UTIME_NOW;
+	times[1].tv_sec = Int64_val(mtime);
+	times[1].tv_nsec = Int64_val(mtime_nsec);
+
+	int result = utimensat(AT_FDCWD, String_val(path), times, AT_SYMLINK_NOFOLLOW);
+	if (result != 0)
+		uerror("utimensat", path);
+	return Val_unit;
+}
+
+CAMLprim value db_lchown(value path, value uid, value gid)
+{
+	int result;
+	result = lchown(String_val(path), Int_val(uid), Int_val(gid));
+	if (result == -1)
+		uerror("lchown", path);
+	return Val_unit;
+}
+
+CAMLprim value db_make_special(value path, value kind, value mode, value dev)
+{
+	mode_t nmode = Int_val(mode);
+
+	if (strcmp(String_val(kind), "BLK") == 0)
+		nmode |= S_IFBLK;
+	else if (strcmp(String_val(kind), "CHR") == 0)
+		nmode |= S_IFCHR;
+	else if (strcmp(String_val(kind), "FIFO") == 0)
+		nmode |= S_IFIFO;
+	else if (strcmp(String_val(kind), "SOCK") == 0)
+		nmode |= S_IFSOCK;
+	else {
+		errno = EINVAL;
+		uerror("make_special", path);
+	}
+
+	int result = mknod(String_val(path), nmode, Int64_val(dev));
+	if (result != 0)
+		uerror("make_special", path);
+	return Val_unit;
 }

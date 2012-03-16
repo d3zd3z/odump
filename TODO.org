@@ -7,15 +7,15 @@
    - [X] readdir - need to return name/inode pairs
    - [X] lstat - return finer grained time and more int64s
    - [X] open  - be able to pass in NOATIME flag to open
-   - [ ] utimensat - Set time, accurately, and not following
-   - [ ] mknod
-   - [ ] lchown  - exist
+   - [X] utimensat - Set time, accurately, and not following
+   - [X] mknod
+   - [X] lchown  - exist
    - [ ] read/write that don't copy (later?)  will block the GC
 
 ** Tasks to get minimal functionality
 
    - [X] Generic walker code
-   - [ ] restore
+   - [X] restore
    - [ ] seen-db conversions
    - [ ] backup
 
@@ -24,6 +24,7 @@
    - [ ] general logger
    - [ ] progress meter (can be improved)
    - [ ] clone command
+   - [ ] 64-bit uid/gid (not sure this is ever necessary)
 
 ** Tasks to extend functionality
 
@@ -40,6 +41,13 @@
    - [ ] Better control over when hashes are verified.  Normally, we
      probably only want to verify them when explicitly asked to, or
      perhaps when restoring.
+
+** Problem with jpool
+
+   Things that jpool is also broken with that probably should be
+   fixed.
+
+   - [ ] Restore of non-regular nodes that are hardlinked.
 
 *** Traversal structures
 

@@ -21,12 +21,12 @@ object
   method! enter path chunk node = match node with
     | Nodes.NodeNode ("DIR", props) ->
       if String.length path > dest_len then
-	Unix.mkdir path 0o755
+	Unix.mkdir path 0o700
     | Nodes.NodeNode ("REG", props) ->
       let nlink = int_of_string (SM.find "nlink" props) in
       let ino = Int64.of_string (SM.find "ino" props) in
       if nlink == 1 || not (I64M.mem ino hard_links) then begin
-	out_descr <- Some (Unix.openfile path [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_EXCL] 0o644);
+	out_descr <- Some (Unix.openfile path [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_EXCL] 0o600);
 	if nlink > 1 then
 	  hard_links <- I64M.add ino path hard_links
       end else begin
@@ -47,11 +47,13 @@ object
   method! leave path chunk node = match node with
     | Nodes.NodeNode ("REG", props) ->
       begin match out_descr with
-	| None -> () (* Create hardlink *)
+	| None -> () (* Hard link *)
 	| Some fd ->
 	  Unix.close fd;
 	  out_descr <- None
-      end
+      end;
+      Dbunix.restore_stat path "REG" props
+    | Nodes.NodeNode (kind, props) -> Dbunix.restore_stat path kind props
     | _ -> ()
 end
 
