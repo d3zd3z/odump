@@ -104,15 +104,12 @@ object (self)
 
   val mutable sizes = StringMap.empty
 
-  (* This isn't very efficient, but without doing this, we won't know
-     we've visited a node, and will count the write size multiple
-     times. *)
-  val mutable seen = ISet.empty
+  val seen = BitSet.empty () (* TODO: Get size. *)
 
   method private update hash kind size write_size =
     let index = pool#find_index hash in
-    let (write, count) = if ISet.mem index seen then (0, 0) else begin
-      seen <- ISet.add index seen;
+    let (write, count) = if BitSet.is_set seen index then (0, 0) else begin
+      BitSet.set seen index;
       (write_size, 1)
     end in
     sizes <- StringMap.modify_def empty_du kind (update_du_data size write count) sizes
@@ -127,6 +124,8 @@ object (self)
       info.Chunk.in_write_size
 
   method show_result pool hash =
+    (* printf "seen size: %d\n" (Size.size_b seen); *)
+    (* Display.display "debug.dot" seen; *)
     let node = Nodes.get pool hash in
     (* printf "backup: %s\n" (Hash.to_string hash); *)
     show_backup_node hash node;

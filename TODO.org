@@ -61,7 +61,21 @@
     added to the pool code as mapping that would be specific to the
     local pool.
 
-    - [ ] Hash indices for traversal
+    - [X] Hash indices for traversal
+
+    Need to analyze which data structure is best for storing this
+    result.  The tree-based ones seem good for traversals that
+    represent a small subset of the data.
+
+    Sizes
+
+    | Structure  |     Size | in MB  |
+    |------------+----------+--------|
+    | Set.IntSet | 22257040 | 21.2MB |
+    | ISet       | 10940288 | 10.4MB |
+    | BitSet     |   260008 | 0.2MB  |
+
+    So, clearly, for larger data sets, just using a bitset wins.
 
     For du and comparison between trees, we probably want a cache of
     each directory and information about it's size.  This might be
