@@ -24,6 +24,7 @@
    - [X] general logger
    - [X] progress meter (can be improved)
    - [ ] clone command
+   - [ ] index recovery
    - [ ] 64-bit uid/gid (not sure this is ever necessary)
 
 ** Tasks to extend functionality
