@@ -92,8 +92,44 @@ object
   method leave _ _ _ = ()
 end
 
+class node_meter =
+object
+  inherit Log.meter
+  val mutable count = 0L
+  val mutable compressed = 0L
+  val mutable uncompressed = 0L
+
+  val mutable dirs = 0L
+  val mutable nondirs = 0L
+
+  method add_node (chunk : Chunk.t) =
+    count <- Int64.succ count;
+    uncompressed <- Int64.add uncompressed (Int64.of_int chunk#data_length);
+    compressed <- Int64.add compressed (Int64.of_int chunk#write_size)
+
+  method add_dir = dirs <- Int64.succ dirs
+  method add_nondir = nondirs <- Int64.succ nondirs
+
+  method get_text =
+    let now = Unix.gettimeofday () in
+    let out = IO.output_string () in
+    let fmt = Format.formatter_of_output out in
+    Format.fprintf fmt "%9Ld nodes, %Ld dirs, %Ld nondirs" count dirs nondirs;
+    let rate = Int64.to_float uncompressed /. (now -. start_time) in
+    let zrate = Int64.to_float compressed /. (now -. start_time) in
+    Format.fprintf fmt "@\n%s compressed   (%s/sec)"
+      (Misc.nice_number compressed)
+      (Misc.fnice_number zrate);
+    Format.fprintf fmt " @ %s uncompressed (%s/sec)"
+      (Misc.nice_number uncompressed)
+      (Misc.fnice_number rate);
+    Format.fprintf fmt "@.";
+    IO.close_out out
+end
+
 let walk (pool : File_pool.t) path hash (visitor : visitor) =
   let full_data = visitor#want_full_data in
+  let meter = new node_meter in
   let rec descend path hash =
     let (chunk_get, info_get, kind) = Option.get (pool#find_full hash) in
     if (not full_data) && kind == "blob" then
@@ -101,6 +137,13 @@ let walk (pool : File_pool.t) path hash (visitor : visitor) =
     else begin
       let chunk = chunk_get () in
       let node = decode_node chunk in
+      meter#add_node chunk;
+      begin match node with
+	| NodeNode ("DIR", _) -> meter#add_dir
+	| NodeNode _ -> meter#add_nondir
+	| _ -> ()
+      end;
+      meter#update;
       begin
 	try
 	  visitor#enter path chunk node;
@@ -125,4 +168,5 @@ let walk (pool : File_pool.t) path hash (visitor : visitor) =
       end;
       visitor#leave path chunk node
     end
-  in descend path hash
+  in descend path hash;
+  meter#finish

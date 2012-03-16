@@ -87,17 +87,6 @@ let update_du_data data write count du =
     du_write = Int64.add du.du_write (Int64.of_int write);
     du_count = Int64.add du.du_count (Int64.of_int count) }
 
-(* Units for nicely printing sizes.  YiB would take 70 bits, so cannot
-   be reached by a 64-bit number. *)
-let units = ["B"; "Kib"; "MiB"; "GiB"; "TiB"; "PiB"; "EiB"; "ZiB"; "YiB"]
-let nice_number num =
-  let num = Int64.to_float num in
-  let rec loop num units =
-    if abs_float num > 1024.0 then loop (num /. 1024.0) (List.tl units)
-    else (num, List.hd units) in
-  let (num, unit) = loop num units in
-  sprintf "%6.1f%-3s" num unit
-
 class du_visitor pool =
 object (self)
   inherit Nodes.empty_visitor
@@ -135,8 +124,8 @@ object (self)
     let each kind info =
       printf "%4s %15Ld (%s)   %15Ld (%s)  (%Ld)\n"
 	kind
-	info.du_data (nice_number info.du_data)
-	info.du_write (nice_number info.du_write)
+	info.du_data (Misc.nice_number info.du_data)
+	info.du_write (Misc.nice_number info.du_write)
 	info.du_count in
     StringMap.iter each sizes;
     printf "\n"

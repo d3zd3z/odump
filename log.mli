@@ -12,3 +12,16 @@ val log : log -> level -> (unit -> event) -> unit
 (* Log failure, and then exit. *)
 val failure : event -> 'a
 val warn : (unit -> event) -> unit
+
+(* Progress meter support.  Implement [#get_text] and call [#update]
+   to implement a meter. *)
+class virtual meter :
+object
+  val mutable last_update : float
+  val start_time : float
+  method virtual get_text : string
+  method clear : unit
+  method force : unit
+  method update : unit
+  method finish : unit
+end

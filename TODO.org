@@ -21,8 +21,8 @@
 
 ** Tasks to be comparable to jpool
 
-   - [ ] general logger
-   - [ ] progress meter (can be improved)
+   - [X] general logger
+   - [X] progress meter (can be improved)
    - [ ] clone command
    - [ ] 64-bit uid/gid (not sure this is ever necessary)
 
