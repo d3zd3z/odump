@@ -30,11 +30,11 @@ let show_backup_node hash node = match node with
       (Hash.to_string hash)
       (format_date date)
       (Buffer.contents buf)
-  | _ -> failwith "Invalid node"
+  | _ -> Log.failure ("Invalid node", [])
 
 let backup_compare a b = match (a, b) with
   | (Nodes.BackupNode (da, _), Nodes.BackupNode (db, _)) -> compare da db
-  | _ -> failwith "Attempt to sort non-backup nodes"
+  | _ -> Log.failure ("Attempt to sort non-backup nodes", [])
 
 let list path =
   File_pool.with_file_pool path (fun pool ->
@@ -161,6 +161,6 @@ let main () =
     | [| _; "walk"; path; node |] -> walk path node
     | [| _; "du"; path; node |] -> du path node
     | [| _; "restore"; path; node; dest |] -> restore path node dest
-    | _ -> failwith "Incorrect usage"
+    | _ -> Log.failure ("Incorrect usage", [])
 
 let _ = main ()

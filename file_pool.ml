@@ -17,7 +17,7 @@ let get_uuid () = Uuidm.to_string (Uuidm.create `V4)
 
 let create_file_pool ?(limit=default_limit) ?(newfile=false) path =
   if limit < limit_lower_bound || limit > limit_upper_bound then
-    failwith "Pool size limit out of range";
+    Log.failure ("Pool size limit out of range", []);
   Misc.ensure_empty_directory ~what:"pool" path;
   let metadata = Filename.concat path "metadata" in
   let props_name = Filename.concat metadata "props.txt" in
@@ -37,7 +37,7 @@ let read_flat_properties filename =
     if String.length line > 0 && line.[0] == '#' then map
     else begin
       match String.Exceptionless.split line "=" with
-	  None -> failwith (sprintf "Invalid line in property file '%s'" line)
+	  None -> Log.failure ("Invalid line in property file", ["line", line])
 	| Some (key, value) -> StringMap.add key value map
     end in
   let get inp = fold decode StringMap.empty (IO.lines_of inp) in
@@ -59,7 +59,7 @@ let to_index_name path =
   if String.ends_with path ".data" then
     String.sub path 0 (String.length path - 5) ^ ".idx"
   else
-    failwith **> "Malformed datafile name: " ^ path
+    Log.failure ("Malformed datafile name", ["path", path])
 
 let data_re = Str.regexp "^pool-data-\\([0-9][0-9][0-9][0-9]\\)\\.data$"
 (* Note that Str doesn't appear to be reentrant. *)
@@ -123,7 +123,7 @@ object (self)
     | ({ n_index=index } :: _) -> index
 
   method private next_name =
-    if nodes <> [] then failwith "TODO: next_name";
+    if nodes <> [] then Log.failure ("TODO: next_name", []);
     make_pool_name path 0
 
   (* Is there room for [chunk] in the current pool file? *)

@@ -10,7 +10,7 @@ let of_data lst =
   h#result
 
 let of_raw item =
-  if String.length item <> 20 then failwith "Hash must be 20 bytes";
+  if String.length item <> 20 then Log.failure ("Hash must be 20 bytes", ["item", item]);
   String.copy item
 
 (* Note that this doesn't copy the string, so be careful. *)
@@ -24,7 +24,7 @@ let to_string hash =
   Buffer.contents buf
 
 let of_string text =
-  if String.length text <> 40 then failwith "Expect 40 character string.";
+  if String.length text <> 40 then Log.failure ("Expect 40 character string", ["text", text]);
   let result = String.create 20 in
   let get pos = int_of_string ("0x" ^ String.sub text (pos*2) 2) in
   for i = 0 to 19 do

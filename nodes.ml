@@ -1,7 +1,6 @@
 (* Backup nodes. *)
 
 open Batteries_uni
-open Printf
 
 module StringMap = Map.StringMap
 
@@ -21,7 +20,7 @@ type node =
 let extract_dir data =
   let len = String.length data in
   let rec loop map pos =
-    if pos > len then failwith "extract_dir overflow";
+    if pos > len then Log.failure ("extract_dir overflow", []);
     if pos = len then map else begin
       let name_len = Binary.get16be data pos in
       let name = String.sub data (pos + 2) name_len in
@@ -33,7 +32,7 @@ let extract_dir data =
 
 let extract_indirect data =
   let len = String.length data in
-  if len mod 20 <> 0 then failwith "Invalid indirect data length";
+  if len mod 20 <> 0 then Log.failure ("Invalid indirect data length", []);
   let len = len / 20 in
   let result = Array.create len Hash.null_hash in
   for i = 0 to len - 1 do
@@ -68,7 +67,7 @@ let decode_node chunk =
     | "blob" -> BlobNode (chunk#data)
     | kind ->
       Pdump.pdump chunk#data;
-      failwith **> sprintf "Unknown node kind: '%s'" kind
+      Log.failure ("Unknown node kind", ["kind", kind])
 
 let get pool hash =
   let chunk = pool#find hash in

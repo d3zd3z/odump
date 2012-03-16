@@ -1,7 +1,6 @@
 (* Property files *)
 
 open Batteries_uni
-open Printf
 
 module StringMap = Map.StringMap
 
@@ -62,7 +61,7 @@ let catalog =
 let get_attribute node key =
   match node#attribute key with
     | Pxp_types.Value x -> x
-    | _ -> failwith "Invalid 'key' attribute in XML"
+    | _ -> Log.failure ("Invalid 'key' attribute in XML", ["key", key])
 
 let decode_properties doc =
   let each map node = StringMap.add (get_attribute node "key") node#data map in
@@ -79,7 +78,7 @@ let of_java_xml text =
   if text.[0] = '<' then of_java_xml' text else
     match decode_packed text with
       | ("back", props) -> props
-      | (kind, _) -> failwith ("Invalid kind of backup record: " ^ kind)
+      | (kind, _) -> Log.failure ("Invalid kind of backup record", ["kind", kind])
 
 let of_jpool_xml' text =
   let source = Pxp_types.from_string text in

@@ -130,14 +130,16 @@ let write_index path file_size enum =
   end;
   Unix.rename temp_name path
 
+exception Index_read_error of string
+
 let read_header chan file_size =
   let buf = read_buffer chan header_size in
   if index_magic <> String.sub buf 0 8 then
-    failwith "Invalid index file magic";
+    raise (Index_read_error "Invalid index file magic");
   if get32le buf 8 <> 4 then
-    failwith "Incorrect index version";
+    raise (Index_read_error "Incorrect index version");
   if get32le buf 12 <> file_size then
-    failwith "File size doesn't match index"
+    raise (Index_read_error "File size doesn't match index")
 
 let read_top chan =
   let buf = read_buffer chan (4 * 256) in
@@ -263,7 +265,7 @@ object (self)
 
   method add hash pos kind =
     if HashMap.mem hash ram then
-      failwith "Attempt to add duplicate key";
+      Log.failure ("Attempt to add duplicate key", []);
     ram <- HashMap.add hash (pos, kind) ram
 
   method mem hash = match self#find_option hash with

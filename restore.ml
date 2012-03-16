@@ -40,7 +40,7 @@ object
 	| Some fd ->
 	  let len = String.length data in
 	  let count = Unix.write fd data 0 len in
-	  if count <> len then failwith "Short write"
+	  if count <> len then Log.failure ("Short write", ["path", path])
       end
     | _ -> ()
 

@@ -52,7 +52,7 @@ let decode_time time =
 	  nsec ^ String.make (9-len) ' '
 	else nsec in
       (Int64.of_string sec, Int64.of_string nsec)
-    | _ -> failwith ("Invalid time data: " ^ time)
+    | _ -> Log.failure ("Invalid time data", ["time", time])
 
 let set_time path props =
   let (sec, nsec) = decode_time (SM.find "mtime" props) in
@@ -77,7 +77,8 @@ let restore_stat path kind props = match kind with
   | "CHR" | "BLK" | "FIFO" | "SOCK" ->
     let is_dev = SM.mem "rdev" props in
     if is_dev && not (is_root ()) then
-      Printf.printf "Cannot restore device as non-root: %s\n" path
+      Log.warn (fun () ->
+	"Cannot restore device as non-root", ["path", path])
     else begin
       let dev = if is_dev then get_int64 "rdev" props else 0L in
       with_umask 0 (make_special path kind (get_int "mode" props)) dev;
@@ -86,4 +87,5 @@ let restore_stat path kind props = match kind with
       set_time path props
     end
 
-  | _ -> Printf.printf "TODO: Restore of %s: %s\n" kind path
+  | _ ->
+    Log.warn (fun () -> "TODO: Restore kind", ["kind", kind; "path", path])
