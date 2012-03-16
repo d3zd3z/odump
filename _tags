@@ -7,3 +7,6 @@
 # Use the native library.
 <*.byte>: custom
 <*.{native,byte}>: use_dbunix
+
+# Jean-Christophe Filliatre's utilities
+<ds>: include
