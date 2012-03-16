@@ -115,14 +115,18 @@ object
     let out = IO.output_string () in
     let fmt = Format.formatter_of_output out in
     Format.fprintf fmt "%9Ld nodes, %Ld dirs, %Ld nondirs" count dirs nondirs;
-    let rate = Int64.to_float uncompressed /. (now -. start_time) in
-    let zrate = Int64.to_float compressed /. (now -. start_time) in
-    Format.fprintf fmt "@\n%s compressed   (%s/sec)"
-      (Misc.nice_number compressed)
-      (Misc.fnice_number zrate);
+    let funcomp = Int64.to_float uncompressed in
+    let fcomp = Int64.to_float compressed in
+    let rate = funcomp /. (now -. start_time) in
+    let zrate = fcomp /. (now -. start_time) in
+    let ratio = ((funcomp -. fcomp) /. funcomp) *. 100.0 in
     Format.fprintf fmt " @ %s uncompressed (%s/sec)"
       (Misc.nice_number uncompressed)
       (Misc.fnice_number rate);
+    Format.fprintf fmt "@\n%s compressed   (%s/sec)  %.1f%%"
+      (Misc.nice_number compressed)
+      (Misc.fnice_number zrate)
+      ratio;
     Format.fprintf fmt "@.";
     IO.close_out out
 end
