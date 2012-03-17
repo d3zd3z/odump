@@ -184,7 +184,7 @@ let encode_dir children =
   StringMap.iter each children;
   Chunk.chunk_of_string "dir " (Buffer.contents buf)
 
-let encode_node_node kind props =
+let encode_node_node chunk_kind kind props =
   let buf = Buffer.create 128 in
   Buffer.add_char buf (Char.chr (String.length kind));
   Buffer.add_string buf kind;
@@ -194,7 +194,7 @@ let encode_node_node kind props =
     Binary.buffer_add_16be buf (String.length value);
     Buffer.add_string buf value in
   StringMap.iter each props;
-  Chunk.chunk_of_string "node" (Buffer.contents buf)
+  Chunk.chunk_of_string chunk_kind (Buffer.contents buf)
 
 let encode_indirect prefix level children =
   let kind = Printf.sprintf "%s%d" prefix level in
@@ -210,9 +210,13 @@ let rec encode_node node = match node with
   | DirNode children when StringMap.is_empty children -> encode_node NullNode
   | DirNode children -> encode_dir children
   | NullNode -> Chunk.chunk_of_string "null" ""
-  | NodeNode (kind, props) -> encode_node_node kind props
+  | NodeNode (kind, props) -> encode_node_node "node" kind props
   | IndirectNode (Dir_Indirect, level, children) -> encode_indirect "dir" level children
   | IndirectNode (Data_Indirect, level, children) -> encode_indirect "ind" level children
+  | BackupNode (date, props) ->
+    let (_, date) = modf (date *. 1000.0) in
+    let props = StringMap.add "_date" (Printf.sprintf "%.0f" date) props in
+    encode_node_node "back" "back" props
   | _ -> Log.failure ("TODO", ["where", "Nodes.put"])
 
 let put pool node =

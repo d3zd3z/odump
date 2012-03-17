@@ -21,8 +21,17 @@ let sample_nodes () =
 		"other", "other thingy" ] in
   let props = SM.of_enum (List.enum props) in
 
+  let bprops = [ "some", "other things go here";
+		 "just", "for giggles";
+		 "not", "very important" ] in
+  let bprops = SM.of_enum (List.enum bprops) in
+
   let ind1 = Array.of_enum (Enum.map int_hash (1 -- 5000)) in
   let ind2 = Array.of_enum (Enum.map int_hash (5000 -- 9000)) in
+
+  let round_time = (Unix.gettimeofday ()) *. 1000.0 in
+  let (_, round_time) = modf round_time in
+  let round_time = round_time /. 1000.0 in
 
   [ Nodes.BlobNode (make_random_string 32 32);
     Nodes.BlobNode (make_random_string 1 1);
@@ -33,6 +42,7 @@ let sample_nodes () =
     Nodes.NodeNode ("REG", props);
     Nodes.IndirectNode (Nodes.Dir_Indirect, 0, ind1);
     Nodes.IndirectNode (Nodes.Data_Indirect, 2, ind2);
+    Nodes.BackupNode (round_time, bprops);
 ]
 
 (* Maps don't generally compare equal, unless they were created in the
@@ -49,6 +59,8 @@ let roundtrip pool =
   let base = sample_nodes () in
   let hashes = List.map (Nodes.put pool) base in
   let read_back = List.map (Nodes.get pool) hashes in
+  (* printf "base: %s\n" (dump base);
+     printf "rest: %s\n" (dump read_back); *)
   assert_equal (List.map normalize_node base)
     (List.map normalize_node read_back);
 
