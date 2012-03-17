@@ -16,12 +16,18 @@ let sample_nodes () =
 	       (make_random_string 1023 1023), int_hash 3] in
   let dir1 = SM.of_enum (List.enum dir1) in
 
+  let props = [ "simple", "simple value";
+		"complex", (make_random_string 1023 1023);
+		"other", "other thingy" ] in
+  let props = SM.of_enum (List.enum props) in
+
   [ Nodes.BlobNode (make_random_string 32 32);
     Nodes.BlobNode (make_random_string 1 1);
     Nodes.BlobNode (make_random_string 131072 131072);
 
     Nodes.NullNode;
     Nodes.DirNode dir1;
+    Nodes.NodeNode ("REG", props);
 ]
 
 (* Maps don't generally compare equal, unless they were created in the
