@@ -24,6 +24,15 @@ let put32le buf offset value =
   put 2 (value lsr 16);
   put 3 (value lsr 24)
 
+let put16be buf offset value =
+  let put pos num = buf.[offset + pos] <- Char.chr (num land 255) in
+  put 0 (value lsr 8);
+  put 1 value
+
+let buffer_add_16be buffer value =
+  Buffer.add_char buffer (Char.chr ((value lsr 8) land 255));
+  Buffer.add_char buffer (Char.chr (value land 255))
+
 let read_buffer chan len =
   let buf = String.create len in
   really_input chan buf 0 len;

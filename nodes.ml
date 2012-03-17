@@ -175,9 +175,22 @@ let walk (pool : File_pool.t) path hash (visitor : visitor) =
   in descend path hash;
   meter#finish
 
+let encode_dir children =
+  let buf = Buffer.create 128 in
+  let each name hash =
+    Binary.buffer_add_16be buf (String.length name);
+    Buffer.add_string buf name;
+    Buffer.add_string buf (Hash.get_raw hash) in
+  StringMap.iter each children;
+  Chunk.chunk_of_string "dir " (Buffer.contents buf)
+
 (* Writing nodes. *)
-let encode_node node = match node with
+let rec encode_node node = match node with
+  | BlobNode data when String.length data = 0 -> encode_node NullNode
   | BlobNode data -> Chunk.chunk_of_string "blob" data
+  | DirNode children when StringMap.is_empty children -> encode_node NullNode
+  | DirNode children -> encode_dir children
+  | NullNode -> Chunk.chunk_of_string "null" ""
   | _ -> Log.failure ("TODO", ["where", "Nodes.put"])
 
 let put pool node =
