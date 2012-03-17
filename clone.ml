@@ -6,6 +6,9 @@ class clone_visitor dest_pool =
 object
   inherit Nodes.empty_visitor
   method! want_full_data = true
+  method! enter _ chunk _ =
+    if dest_pool#mem chunk#hash then
+      raise Nodes.Prune
   method! leave _ chunk _ =
     if not (dest_pool#mem chunk#hash) then
       dest_pool#add chunk
