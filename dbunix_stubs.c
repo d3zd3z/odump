@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -179,4 +180,14 @@ CAMLprim value db_make_special(value path, value kind, value mode, value dev)
 	if (result != 0)
 		uerror("make_special", path);
 	return Val_unit;
+}
+
+CAMLprim value db_realpath(value path)
+{
+	char *result = realpath(String_val(path), NULL);
+	if (result == NULL)
+		uerror("realpath", path);
+	value tmp = copy_string(result);
+	free(result);
+	return tmp;
 }

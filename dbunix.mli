@@ -21,3 +21,8 @@ val restore_stat : string -> string -> string Map.StringMap.t -> unit
 
 val float_of_time : string -> float
 (** Decode an attribute representing a time into a stdlib float time. *)
+
+val realpath : string -> string
+
+val mountpoint_of : string -> string
+(** Determine the mountpoint associated with this path. *)

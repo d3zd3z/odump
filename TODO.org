@@ -27,12 +27,14 @@
    - [ ] index recovery
    - [ ] 64-bit uid/gid (not sure this is ever necessary)
    - [ ] pool locking
+   - [ ] pool hash verification
 
 ** Tasks to extend functionality
 
    - [X] Simple size scanning
    - [ ] Tree comparisons
    - [ ] Write statistics on clone
+   - [ ] Store canonical path in backup to make cache regeneration easier
 
 ** Misc things (cleanups etc)
 
@@ -44,6 +46,7 @@
    - [ ] Better control over when hashes are verified.  Normally, we
      probably only want to verify them when explicitly asked to, or
      perhaps when restoring.
+   - [ ] Progress meter on multiple-clones doesn't cleanup properly.
 
 ** Problem with jpool
 

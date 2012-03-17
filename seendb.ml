@@ -81,8 +81,8 @@ object
   method commit = Db.sql0 db "commit" []
 end
 
-let make_cache pool node =
-  let db = Db.connect "/tmp/blah.sqlite" schema in
+let make_cache pool cache_name node =
+  let db = Db.connect cache_name schema in
   let visit = new seen_update_visitor db in
   Nodes.walk pool "." node (visit :> Nodes.visitor);
   visit#commit

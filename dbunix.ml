@@ -96,3 +96,27 @@ let restore_stat path kind props = match kind with
 
   | _ ->
     Log.warn (fun () -> "TODO: Restore kind", ["kind", kind; "path", path])
+
+external realpath : string -> string = "db_realpath"
+
+(* Chop up a canonical path into strings with successively shorter
+   components.  (Not tail recursive, paths have limited bound) *)
+let rec chop_path path =
+  if path = "/" then ["/"]
+  else path :: chop_path (Filename.dirname path)
+
+(* The mount point is either the first directory element whose parent
+   is on a different device, or the first one with a parent as the root
+   of the filesystem. *)
+let mountpoint_of path =
+  let rpath = realpath path in
+  let parts = chop_path rpath in
+  let rec loop parts = match parts with
+    | [(root, _)] -> root
+    | ((a, astat) :: (((b, bstat) :: _) as rest)) ->
+      if astat.Unix.st_dev = bstat.Unix.st_dev then
+	loop rest
+      else a
+    | [] -> Log.failure ("Empty path", ["path", path; "rpath", rpath]) in
+  let stats = List.map Unix.lstat parts in
+  loop (List.combine parts stats)
