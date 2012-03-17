@@ -148,6 +148,9 @@ let make_cache path hash =
   File_pool.with_file_pool path (fun pool ->
     Seendb.make_cache pool hash)
 
+let create_pool path =
+  File_pool.create_file_pool path
+
 let main () =
   match Sys.argv with
     | [| _; "list"; path |] -> list path
@@ -155,6 +158,7 @@ let main () =
     | [| _; "du"; path; node |] -> du path node
     | [| _; "restore"; path; node; dest |] -> restore path node dest
     | [| _; "make-cache"; path; node |] -> make_cache path node
+    | [| _; "create-pool"; path |] -> create_pool path
     | _ -> Log.failure ("Incorrect usage", [])
 
 let _ = main ()
