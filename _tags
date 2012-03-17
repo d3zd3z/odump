@@ -1,4 +1,5 @@
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(batteries), package(oUnit), package(cryptokit), package(zip), package(uuidm), package(pxp)
+<*.ml> or <*.mli> or <*.native> or <*.byte>: package(sqlite3)
 
 # Enable this to get camlp4of.
 # TODO: Figure out how to pull in other extensions.

@@ -143,12 +143,18 @@ let restore path node dest =
   File_pool.with_file_pool path (fun pool ->
     Restore.run_restore pool node dest)
 
+let make_cache path hash =
+  let hash = Hash.of_string hash in
+  File_pool.with_file_pool path (fun pool ->
+    Seendb.make_cache pool hash)
+
 let main () =
   match Sys.argv with
     | [| _; "list"; path |] -> list path
     | [| _; "walk"; path; node |] -> walk path node
     | [| _; "du"; path; node |] -> du path node
     | [| _; "restore"; path; node; dest |] -> restore path node dest
+    | [| _; "make-cache"; path; node |] -> make_cache path node
     | _ -> Log.failure ("Incorrect usage", [])
 
 let _ = main ()

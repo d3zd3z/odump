@@ -54,6 +54,13 @@ let decode_time time =
       (Int64.of_string sec, Int64.of_string nsec)
     | _ -> Log.failure ("Invalid time data", ["time", time])
 
+let float_of_time time =
+  let (sec, nsec) = decode_time time in
+  Log.debug (fun () -> "float_of_time", ["time", time;
+					 "sec", Int64.to_string sec;
+					 "nsec", Int64.to_string nsec]);
+  (Int64.to_float sec (* +. Int64.to_float nsec /. 1.0e9 *))
+
 let set_time path props =
   let (sec, nsec) = decode_time (SM.find "mtime" props) in
   utimensat path sec nsec

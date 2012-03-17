@@ -11,6 +11,8 @@ let failure event =
   exit 1
 
 let warn event_fun = log odump WARN event_fun
+let info event_fun = log odump INFO event_fun
+let debug event_fun = log odump DEBUG event_fun
 
 let has_console = Unix.isatty Unix.stderr
 
@@ -41,6 +43,20 @@ let show_progress text =
     flush stderr
   end
 
+(* Show a message, and a newline, interleaving correctly with the
+   progress meter. *)
+let with_output f =
+  let prior_count = !last_progress_lines in
+  clear_progress ();
+  flush stderr;
+  f ();
+  flush stdout;
+  flush stderr;
+  if prior_count > 0 then
+    show_progress !last_progress
+
+let message text = with_output (fun () -> print_string text; print_newline ())
+
 (* 'Format' based formatter. *)
 let event_to_string log level (desc, parms) time =
   let out = IO.output_string () in
@@ -61,9 +77,12 @@ let mingled_formatter log level event time =
   else
     flush stderr
 
+(* Print a simple message to stdout, interleaving correctly with any
+   progress meter. *)
+
 (* Register a formater that intermingles correctly with the progress
    meter. *)
-let _ = init ["odump", DEBUG] mingled_formatter
+let _ = init ["odump", INFO] mingled_formatter
 
 class virtual meter =
 object (self)

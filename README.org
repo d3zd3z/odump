@@ -14,9 +14,11 @@ Introduction goes here
   - libuuidm-ocaml-dev
   - libzip-ocaml-dev
   - libfindlib-ocaml-dev
+  - libsqlite3-ocaml-dev
 
   This can be installed easily with something like:
 
   sudo apt-get install ocaml-findlib libbatteries-ocaml-dev \
        libcryptokit-ocaml-dev libounit-ocaml-dev libpxp-ocaml-dev \
-       libuuidm-ocaml-dev libzip-ocaml-dev libfindlib-ocaml-dev
+       libuuidm-ocaml-dev libzip-ocaml-dev libfindlib-ocaml-dev \
+       libsqlite3-ocaml-dev

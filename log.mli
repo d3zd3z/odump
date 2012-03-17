@@ -11,7 +11,12 @@ val log : log -> level -> (unit -> event) -> unit
 
 (* Log failure, and then exit. *)
 val failure : event -> 'a
+val info : (unit -> event) -> unit
 val warn : (unit -> event) -> unit
+val debug : (unit -> event) -> unit
+
+val message : string -> unit
+val with_output : (unit -> unit) -> unit
 
 (* Progress meter support.  Implement [#get_text] and call [#update]
    to implement a meter. *)

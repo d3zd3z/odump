@@ -18,3 +18,6 @@ val lstat : string -> (string * (string * string) list)
 val restore_stat : string -> string -> string Map.StringMap.t -> unit
 (** [Dbunix.restore_stat path kind stats] restores the file stats
     appropriately for the kind of file. *)
+
+val float_of_time : string -> float
+(** Decode an attribute representing a time into a stdlib float time. *)
