@@ -21,6 +21,9 @@ let sample_nodes () =
 		"other", "other thingy" ] in
   let props = SM.of_enum (List.enum props) in
 
+  let ind1 = Array.of_enum (Enum.map int_hash (1 -- 5000)) in
+  let ind2 = Array.of_enum (Enum.map int_hash (5000 -- 9000)) in
+
   [ Nodes.BlobNode (make_random_string 32 32);
     Nodes.BlobNode (make_random_string 1 1);
     Nodes.BlobNode (make_random_string 131072 131072);
@@ -28,6 +31,8 @@ let sample_nodes () =
     Nodes.NullNode;
     Nodes.DirNode dir1;
     Nodes.NodeNode ("REG", props);
+    Nodes.IndirectNode (Nodes.Dir_Indirect, 0, ind1);
+    Nodes.IndirectNode (Nodes.Data_Indirect, 2, ind2);
 ]
 
 (* Maps don't generally compare equal, unless they were created in the

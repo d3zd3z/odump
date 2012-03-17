@@ -61,7 +61,7 @@ let decode_node chunk =
     | kind when String.starts_with kind "dir" ->
       decode_indirect kind Dir_Indirect chunk
     | kind when String.starts_with kind "ind" ->
-      decode_indirect kind Dir_Indirect chunk
+      decode_indirect kind Data_Indirect chunk
 
     | "null" -> NullNode
     | "blob" -> BlobNode (chunk#data)
@@ -196,6 +196,13 @@ let encode_node_node kind props =
   StringMap.iter each props;
   Chunk.chunk_of_string "node" (Buffer.contents buf)
 
+let encode_indirect prefix level children =
+  let kind = Printf.sprintf "%s%d" prefix level in
+  let buf = Buffer.create (Array.length children * 20) in
+  let each hash = Buffer.add_string buf (Hash.get_raw hash) in
+  Array.iter each children;
+  Chunk.chunk_of_string kind (Buffer.contents buf)
+
 (* Writing nodes. *)
 let rec encode_node node = match node with
   | BlobNode data when String.length data = 0 -> encode_node NullNode
@@ -204,6 +211,8 @@ let rec encode_node node = match node with
   | DirNode children -> encode_dir children
   | NullNode -> Chunk.chunk_of_string "null" ""
   | NodeNode (kind, props) -> encode_node_node kind props
+  | IndirectNode (Dir_Indirect, level, children) -> encode_indirect "dir" level children
+  | IndirectNode (Data_Indirect, level, children) -> encode_indirect "ind" level children
   | _ -> Log.failure ("TODO", ["where", "Nodes.put"])
 
 let put pool node =
