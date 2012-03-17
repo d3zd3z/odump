@@ -13,7 +13,6 @@ type node =
   | IndirectNode of indirect_kind * int * Hash.t array
   | NullNode
   | BlobNode of string
-  | OtherNode
 
 val get : File_pool.t -> Hash.t -> node
 

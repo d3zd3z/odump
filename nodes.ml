@@ -15,7 +15,6 @@ type node =
   | IndirectNode of indirect_kind * int * Hash.t array
   | NullNode
   | BlobNode of string
-  | OtherNode
 
 let extract_dir data =
   let len = String.length data in
@@ -217,7 +216,6 @@ let rec encode_node node = match node with
     let (_, date) = modf (date *. 1000.0) in
     let props = StringMap.add "_date" (Printf.sprintf "%.0f" date) props in
     encode_node_node "back" "back" props
-  | _ -> Log.failure ("TODO", ["where", "Nodes.put"])
 
 let put pool node =
   let chunk = encode_node node in
