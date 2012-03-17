@@ -30,6 +30,11 @@ let create_file_pool ?(limit=default_limit) ?(newfile=false) path =
     fprintf out "limit=%d\n" limit in
   with_dispose ~dispose:close_out put (open_out props_name)
 
+(* Add another entry to the backup list. *)
+let append_backup path hash =
+  File.with_file_out ~mode:[`append; `create] path (fun out ->
+    fprintf out "%s\n" (Hash.to_string hash))
+
 (* Real Java property files are more complex than this, but we only
    need to be able to read back what we've written. *)
 let read_flat_properties filename =
@@ -87,10 +92,17 @@ let find_backup_nodes path =
     { n_file = file; n_index = index; n_path = fname } in
   List.map lookup nums
 
+(* Increment the number embedded in this name. *)
+let number_re = Str.regexp "[0-9][0-9][0-9][0-9]"
+let get_number name =
+  let pos = Str.search_backward number_re name (String.length name) in
+  int_of_string (String.sub name pos 4)
+
 (* TODO: Handle newfile. *)
 class type file_pool =
 object
   method add : Chunk.t -> unit
+  method mem : Hash.t -> bool
   method find : Hash.t -> Chunk.t
   method find_option : Hash.t -> Chunk.t option
 
@@ -123,8 +135,10 @@ object (self)
     | ({ n_index=index } :: _) -> index
 
   method private next_name =
-    if nodes <> [] then Log.failure ("TODO: next_name", []);
-    make_pool_name path 0
+    let num = match nodes with
+      | [] -> 0
+      | (node::_) -> 1 + get_number node.n_path in
+    make_pool_name path num
 
   (* Is there room for [chunk] in the current pool file? *)
   method private room chunk =
@@ -143,6 +157,8 @@ object (self)
     let index = self#cur_index in
     let pos = file#append chunk in
     index#add chunk#hash pos chunk#kind;
+    if chunk#kind = "back" then
+      append_backup (Filename.concat metadata "backups.txt") chunk#hash;
     dirty <- true
 
   method find_full hash =
@@ -153,6 +169,10 @@ object (self)
 	 (fun () -> node.n_file#read_info pos),
 	 kind)) info in
     List.Exceptionless.find_map lookup nodes
+
+  method mem hash =
+    let lookup node = node.n_index#mem hash in
+    List.exists lookup nodes
 
   method find_option hash =
     Option.map (fun (chunk, _, _) -> chunk ()) (self#find_full hash)

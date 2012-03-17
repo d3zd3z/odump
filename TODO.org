@@ -23,7 +23,7 @@
 
    - [X] general logger
    - [X] progress meter (can be improved)
-   - [ ] clone command
+   - [X] clone command
    - [ ] index recovery
    - [ ] 64-bit uid/gid (not sure this is ever necessary)
    - [ ] pool locking
@@ -32,6 +32,7 @@
 
    - [X] Simple size scanning
    - [ ] Tree comparisons
+   - [ ] Write statistics on clone
 
 ** Misc things (cleanups etc)
 

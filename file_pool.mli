@@ -3,6 +3,7 @@
 class type file_pool =
 object
   method add : Chunk.t -> unit
+  method mem : Hash.t -> bool
   method find : Hash.t -> Chunk.t
   method find_option : Hash.t -> Chunk.t option
 

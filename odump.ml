@@ -151,14 +151,22 @@ let make_cache path hash =
 let create_pool path =
   File_pool.create_file_pool path
 
+let pool_clone src_path dest_path hashes =
+  let hashes = List.map Hash.of_string hashes in
+  File_pool.with_file_pool src_path (fun src_pool ->
+    File_pool.with_file_pool dest_path (fun dest_pool ->
+      Clone.clone_trees src_pool dest_pool hashes))
+
 let main () =
-  match Sys.argv with
-    | [| _; "list"; path |] -> list path
-    | [| _; "walk"; path; node |] -> walk path node
-    | [| _; "du"; path; node |] -> du path node
-    | [| _; "restore"; path; node; dest |] -> restore path node dest
-    | [| _; "make-cache"; path; node |] -> make_cache path node
-    | [| _; "create-pool"; path |] -> create_pool path
+  match Array.to_list Sys.argv with
+    | [ _; "list"; path ] -> list path
+    | [ _; "walk"; path; node ] -> walk path node
+    | [ _; "du"; path; node ] -> du path node
+    | [ _; "restore"; path; node; dest ] -> restore path node dest
+    | [ _; "make-cache"; path; node ] -> make_cache path node
+    | [ _; "create-pool"; path ] -> create_pool path
+    | (_ :: "clone" :: src_path :: dest_path :: hash1 :: hashes) ->
+      pool_clone src_path dest_path (hash1 :: hashes)
     | _ -> Log.failure ("Incorrect usage", [])
 
 let _ = main ()
