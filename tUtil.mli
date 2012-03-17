@@ -6,6 +6,11 @@ val with_temp_dir: (string -> 'a) -> unit -> 'a
     the temporary directory before returning the value returned by
     [op]. *)
 
+val with_temp_pool: (File_pool.t -> 'a) -> unit -> 'a
+(** [TUtil.with_temp_pool op] Creates a temporary directory, and then
+    a pool within it, and calls [op] passing the pool.  Cleans up when
+    [op] returns. *)
+
 val make_random_string: int -> int -> string
 (** [TUtil.make_random_string size seed] generate a pseudo-random
     string of length [size] using [seed] for the randomness.  The string

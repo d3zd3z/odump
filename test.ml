@@ -9,6 +9,7 @@ let all = "test" >::: [
   Test_file_pool.suite;
   Test_properties.suite;
   Test_dbunix.suite;
+  Test_nodes.suite;
 ]
 
 let _ = run_test_tt_main all

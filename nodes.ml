@@ -174,3 +174,20 @@ let walk (pool : File_pool.t) path hash (visitor : visitor) =
     end
   in descend path hash;
   meter#finish
+
+(* Writing nodes. *)
+let encode_node node = match node with
+  | BlobNode data -> Chunk.chunk_of_string "blob" data
+  | _ -> Log.failure ("TODO", ["where", "Nodes.put"])
+
+let put pool node =
+  let chunk = encode_node node in
+  pool#add chunk;
+  chunk#hash
+
+let try_put pool node =
+  let chunk = encode_node node in
+  begin try pool#add chunk with
+    | File_pool.Already_present -> ()
+  end;
+  chunk#hash

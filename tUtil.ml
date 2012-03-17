@@ -49,6 +49,12 @@ let with_temp_dir op () =
   let path = loop 5 in
   Std.with_dispose ~dispose:cleanup op path
 
+let with_temp_pool op =
+  let op2 dir =
+    File_pool.create_file_pool dir;
+    Std.with_dispose ~dispose:(fun p -> p#close) op (File_pool.open_file_pool dir) in
+ with_temp_dir op2
+
 (* This is biased a bit, but it doesn't really matter. *)
 let random_next st limit =
   let st' = Int32.add (Int32.mul st 1103515245l) 12345l in
