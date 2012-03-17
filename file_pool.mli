@@ -1,8 +1,13 @@
 (* File storage pools *)
 
+exception Already_present
+
 class type file_pool =
 object
   method add : Chunk.t -> unit
+  (** [add chunk] adds the given chunk to the storage pool.  If the
+      chunk is already present, raises [Already_present]. *)
+
   method mem : Hash.t -> bool
   method find : Hash.t -> Chunk.t
   method find_option : Hash.t -> Chunk.t option
