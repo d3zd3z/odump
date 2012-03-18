@@ -94,13 +94,17 @@ let close cache = Db.close cache
 
 let with_cache path f = with_dispose ~dispose:close f (open_cache path)
 
+let remove_expired nodes =
+  Int64Map.filter (fun { n_expire } -> n_expire > start_time) nodes
+
 let get cache pino =
   match Db.sqln cache "select info from seen where pino = ?" [Db.Data.INT pino] with
     | [ ] -> Int64Map.empty
     | [ [| Db.Data.BLOB data |] ] ->
       let nodes = (Marshal.from_string data 0 : dir_node list) in
       let as_pair ({ n_inode } as node) = (n_inode, node) in
-      Int64Map.of_enum (Enum.map as_pair (List.enum nodes))
+      let nodes = Int64Map.of_enum (Enum.map as_pair (List.enum nodes)) in
+      remove_expired nodes
     | [ items ] ->
       let items = Array.to_list items in
       let items = String.join ", " (List.map Db.Data.to_string_debug items) in

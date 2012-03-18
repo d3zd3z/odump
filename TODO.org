@@ -31,6 +31,7 @@
    - [ ] pool hash verification
    - [ ] don't cross device boundaries
    - [ ] progress meter on backup
+   - [ ] manual prune of expired cache entries
 
 ** Tasks to extend functionality
 
