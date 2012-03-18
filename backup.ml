@@ -5,7 +5,7 @@ open Batteries_uni
 module StringMap = Map.StringMap
 
 (* Wrap a storage pool in a tracker that monitors a progress meter. *)
-class write_track_pool (inner : File_pool.file_pool) =
+class write_track_pool (inner : #File_pool.file_pool) =
 object (self)
   inherit Log.meter
 
@@ -91,8 +91,7 @@ let store_file pool path =
   Indirect.finish ind
 
 let save pool cache_dir backup_path atts =
-  let full_pool = new write_track_pool pool in
-  let pool = (full_pool :> File_pool.t) in
+  let pool = new write_track_pool pool in
   let now = Unix.gettimeofday () in
   let atts = decode_atts atts in
   let root_stat = match Dbunix.lstat backup_path with
@@ -131,5 +130,5 @@ let save pool cache_dir backup_path atts =
   let atts = StringMap.add "hash" (Hash.to_string root_hash) atts in
 
   let hash = Nodes.try_put pool (Nodes.BackupNode (now, atts)) in
-  full_pool#finish;
+  pool#finish;
   Log.info (fun () -> "Completed backup", ["hash", Hash.to_string hash])

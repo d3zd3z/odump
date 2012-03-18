@@ -14,13 +14,13 @@ type node =
   | NullNode
   | BlobNode of string
 
-val get : File_pool.t -> Hash.t -> node
+val get : #File_pool.file_pool -> Hash.t -> node
 
-val put : File_pool.t -> node -> Hash.t
+val put : #File_pool.file_pool -> node -> Hash.t
 (** [put pool node] Writes the node encoded into the pool.  Does not
     catch [File_pool.Already_present]. *)
 
-val try_put : File_pool.t -> node -> Hash.t
+val try_put : #File_pool.file_pool -> node -> Hash.t
 (** [try_put pool node] Same as [put] but catches and ignores the File_pool.Already_present exception. *)
 
 exception Prune
@@ -44,4 +44,4 @@ class virtual empty_visitor : visitor
     visitor has [#want_full_data] as [true], then enter/leave will be
     called for each data chunk, otherwise the info about the data
     chunks will be passed to [#data_summary]. *)
-val walk : File_pool.t -> string -> Hash.t -> visitor -> unit
+val walk : #File_pool.file_pool -> string -> Hash.t -> visitor -> unit

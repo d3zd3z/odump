@@ -13,7 +13,7 @@ let make_indirect pool prefix limit =
   let core = Buffer.create limit in
   let buffers = Stack.create () in
   Stack.push core buffers;
-  { pool = pool; prefix = prefix; limit = limit;
+  { pool = (pool :> File_pool.t); prefix = prefix; limit = limit;
     buffers = buffers }
 
 (* Push a new buffer level, containing the initial hash. *)
@@ -81,7 +81,7 @@ module Dir = struct
 	     mutable length: int;
 	     ind: ind_t }
 
-  let make pool limit = { pool = pool;
+  let make pool limit = { pool = (pool :> File_pool.t);
 			  limit = limit;
 			  buffer = SM.empty;
 			  length = 0;

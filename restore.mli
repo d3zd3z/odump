@@ -1,3 +1,3 @@
 (* Backup restoration. *)
 
-val run_restore : File_pool.t -> Hash.t -> string -> unit
+val run_restore : #File_pool.file_pool -> Hash.t -> string -> unit
