@@ -21,8 +21,11 @@ let get_directory_contents path =
 	let ent = readdir hand in
 	result := ent :: !result
       done
-    with End_of_file -> ()
+    with
+      | End_of_file -> ()
+      | e -> closedir hand; raise e
   end;
+  closedir hand;
   !result
 
 type stat_info = string * (string * string) list

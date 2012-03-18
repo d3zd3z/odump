@@ -18,6 +18,14 @@ val debug : (unit -> event) -> unit
 val message : string -> unit
 val with_output : (unit -> unit) -> unit
 
+class type meter_type = object
+  method get_text : string
+  method clear : unit
+  method force : unit
+  method update : unit
+  method finish : unit
+end
+
 (* Progress meter support.  Implement [#get_text] and call [#update]
    to implement a meter. *)
 class virtual meter :

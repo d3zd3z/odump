@@ -84,6 +84,14 @@ let mingled_formatter log level event time =
    meter. *)
 let _ = init ["odump", INFO] mingled_formatter
 
+class type meter_type = object
+  method get_text : string
+  method clear : unit
+  method force : unit
+  method update : unit
+  method finish : unit
+end
+
 class virtual meter =
 object (self)
   val mutable last_update = Unix.time ()

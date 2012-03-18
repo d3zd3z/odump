@@ -4,6 +4,60 @@ open Batteries_uni
 
 module StringMap = Map.StringMap
 
+(* Wrap a storage pool in a tracker that monitors a progress meter. *)
+class write_track_pool (inner : File_pool.file_pool) =
+object (self)
+  inherit Log.meter
+
+  val mutable count = 0L
+  val mutable compressed = 0L
+  val mutable uncompressed = 0L
+  val mutable dup = 0L
+  val mutable skip = 0L
+
+  (* TODO: How to share this with the node meter. *)
+  method get_text =
+    let now = Unix.gettimeofday () in
+    let out = IO.output_string () in
+    let fmt = Format.formatter_of_output out in
+    Format.fprintf fmt "%9Ld nodes" count;
+    let funcompressed = Int64.to_float uncompressed in
+    let fcompressed = Int64.to_float compressed in
+    let rate = funcompressed /. (now -. start_time) in
+    let zrate = fcompressed /. (now -. start_time) in
+    let ratio = ((funcompressed -. fcompressed) /. funcompressed) *. 100.0 in
+    let total = Int64.add uncompressed (Int64.add dup skip) in
+    Format.fprintf fmt ", %s dup, %s skip, %s total@\n"
+      (Misc.nice_number dup) (Misc.nice_number skip) (Misc.nice_number total);
+    Format.fprintf fmt "  %s uncompressed (%s/sec)@\n"
+      (Misc.nice_number uncompressed)
+      (Misc.fnice_number rate);
+    Format.fprintf fmt "  %s compressed   (%s/sec)  %.1f%%@."
+      (Misc.nice_number compressed)
+      (Misc.fnice_number zrate) ratio;
+    IO.close_out out
+
+  method add chunk =
+    count <- Int64.succ count;
+    if inner#mem chunk#hash then
+      skip <- Int64.add skip (Int64.of_int chunk#data_length)
+    else begin
+      compressed <- Int64.add compressed (Int64.of_int chunk#write_size);
+      uncompressed <- Int64.add uncompressed (Int64.of_int chunk#data_length);
+      inner#add chunk
+    end;
+    self#update
+
+  method mem = inner#mem
+  method find = inner#find
+  method find_option = inner#find_option
+  method find_full = inner#find_full
+  method find_index = inner#find_index
+  method get_backups = inner#get_backups
+  method flush = inner#flush
+  method close = inner#close
+end
+
 let block_size = 256 * 1024
 
 let decode_atts atts =
@@ -37,6 +91,8 @@ let store_file pool path =
   Indirect.finish ind
 
 let save pool cache_dir backup_path atts =
+  let full_pool = new write_track_pool pool in
+  let pool = (full_pool :> File_pool.t) in
   let now = Unix.gettimeofday () in
   let atts = decode_atts atts in
   let root_stat = match Dbunix.lstat backup_path with
@@ -75,4 +131,5 @@ let save pool cache_dir backup_path atts =
   let atts = StringMap.add "hash" (Hash.to_string root_hash) atts in
 
   let hash = Nodes.try_put pool (Nodes.BackupNode (now, atts)) in
+  full_pool#finish;
   Log.info (fun () -> "Completed backup", ["hash", Hash.to_string hash])
