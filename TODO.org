@@ -32,6 +32,7 @@
    - [ ] don't cross device boundaries
    - [ ] progress meter on backup
    - [ ] manual prune of expired cache entries
+   - [ ] flush pool and index files on write
 
 ** Tasks to extend functionality
 

@@ -195,11 +195,13 @@ let save' pool cache backup_path atts =
 
   in
 
+  Seendb.begin_transaction cache;
   let (root_hash, _) = walk backup_path "DIR" root_stat in
   let atts = StringMap.add "hash" (Hash.to_string root_hash) atts in
 
   let hash = Nodes.try_put pool (Nodes.BackupNode (now, atts)) in
   pool#finish;
+  Seendb.commit cache;
   Log.info (fun () -> "Completed backup", ["hash", Hash.to_string hash])
 
 let save pool cache_dir backup_path atts =
