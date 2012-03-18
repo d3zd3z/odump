@@ -116,7 +116,6 @@ object
 end
 
 type t = file_pool
-exception Already_present
 
 let open_file_pool path =
   Misc.ensure_directory ~what:"pool" path;
@@ -153,16 +152,16 @@ object (self)
     nodes <- { n_file=file; n_index=index; n_path=fname } :: nodes
 
   method add chunk =
-    if self#mem chunk#hash then
-      raise Already_present;
-    if not (self#room chunk) then self#make_new_pool_file;
-    let file = self#cur_file in
-    let index = self#cur_index in
-    let pos = file#append chunk in
-    index#add chunk#hash pos chunk#kind;
-    if chunk#kind = "back" then
-      append_backup (Filename.concat metadata "backups.txt") chunk#hash;
-    dirty <- true
+    if not (self#mem chunk#hash) then begin
+      if not (self#room chunk) then self#make_new_pool_file;
+      let file = self#cur_file in
+      let index = self#cur_index in
+      let pos = file#append chunk in
+      index#add chunk#hash pos chunk#kind;
+      if chunk#kind = "back" then
+	append_backup (Filename.concat metadata "backups.txt") chunk#hash;
+      dirty <- true
+    end
 
   method find_full hash =
     let lookup node =

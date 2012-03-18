@@ -224,7 +224,5 @@ let put pool node =
 
 let try_put pool node =
   let chunk = encode_node node in
-  begin try pool#add chunk with
-    | File_pool.Already_present -> ()
-  end;
+  pool#add chunk;
   chunk#hash
