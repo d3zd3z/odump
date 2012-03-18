@@ -94,17 +94,23 @@ module Cache : sig
   val check : t -> string -> Dbunix.stat -> (unit -> (Hash.t * Dbunix.stat)) ->
     (Hash.t * Dbunix.stat)
 
+  val flush : t -> unit
+
 end = struct
   type t = {
     cache : Seendb.t;
+    pinode : int64;
     prior : Seendb.cache_entry;
+    mutable next : Seendb.cache_entry;
     add_skip : int64 -> unit;
   }
 
   let get cache dir_props add_skip =
     let pino = Dbunix.get_int64 "ino" dir_props in
     { cache = cache;
+      pinode = pino;
       prior = Seendb.get cache pino;
+      next = Seendb.Int64Map.empty;
       add_skip = add_skip }
 
   let check' c kind child_stat get_op =
@@ -122,8 +128,14 @@ end = struct
 	end else get_op ()
 
   let check c kind child_stat get_op = match kind with
-    | "REG" -> check' c kind child_stat get_op
+    | "REG" ->
+      let ((hash, props) as result) = check' c kind child_stat get_op in
+      let entry = Seendb.entry_of_node hash props in
+      c.next <- Seendb.Int64Map.add entry.Seendb.n_inode entry c.next;
+      result
     | _ -> get_op ()
+
+  let flush c = Seendb.update c.cache c.pinode c.next
 end
 
 let store_file pool path =
@@ -177,6 +189,7 @@ let save' pool cache backup_path atts =
 	  walk path child_kind child_props) in
       Log.debug (fun () -> "add", ["name", name; "hash", Hash.to_string hash]);
       Indirect.Dir.add buf name hash) children;
+    Cache.flush dircache;
     let child_hashes = Indirect.Dir.finish buf in
     StringMap.add "children" (Hash.to_string child_hashes) dir_props
 
