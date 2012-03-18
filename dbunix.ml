@@ -31,7 +31,8 @@ let get_directory_contents path =
   closedir hand;
   !result
 
-type stat_info = string * string SM.t
+type stat = string SM.t
+type stat_info = string * stat
 let dir_with_stats path =
   let inames = get_directory_contents path in
   let inames = List.sort ~cmp:(fun (_, a) (_, b) -> Int64.compare a b) inames in
@@ -53,6 +54,7 @@ let is_root () = Lazy.force (lazy (Unix.geteuid () = 0))
 
 let get_int key map = int_of_string (SM.find key map)
 let get_int64 key map = Int64.of_string (SM.find key map)
+let get_hash key map = Hash.of_string (SM.find key map)
 
 (* Decode a time string.  Acceptable formats are either a simple
    integer, or a fractional time with a single decimal point.  Returns
@@ -74,6 +76,8 @@ let float_of_time time =
 					 "sec", Int64.to_string sec;
 					 "nsec", Int64.to_string nsec]);
   (Int64.to_float sec (* +. Int64.to_float nsec /. 1.0e9 *))
+
+let get_time key map = float_of_time (SM.find key map)
 
 let set_time path props =
   let (sec, nsec) = decode_time (SM.find "mtime" props) in
