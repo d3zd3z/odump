@@ -41,6 +41,7 @@ CAMLprim value db_readdir(value vd)
 /* Add a pair list to the result.  'head' should already be a root'. */
 static value add_property(value head, char *key, char *val)
 {
+	CAMLparam1(head);
 	CAMLlocal2(pair, cons);
 	pair = caml_alloc(2, 0);
 	Store_field(pair, 0, copy_string(key));
@@ -48,7 +49,7 @@ static value add_property(value head, char *key, char *val)
 	cons = caml_alloc(2, 0);
 	Store_field(cons, 0, pair);
 	Store_field(cons, 1, head);
-	return cons;
+	CAMLreturn(cons);
 }
 
 static value add_field(value head, char *key, long long val)
