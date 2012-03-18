@@ -48,6 +48,10 @@ object (self)
     end;
     self#update
 
+  method add_skip size =
+    skip <- Int64.add skip size;
+    self#update
+
   method mem = inner#mem
   method find = inner#find
   method find_option = inner#find_option
@@ -78,6 +82,50 @@ let read_chunk fd =
     end in
   read 0
 
+module Cache : sig
+  type t
+
+  (** [get c parent_stat add_skip]. *)
+  val get : Seendb.t -> Dbunix.stat -> (int64 -> unit) -> t
+
+  (** [check c kind child_stat op] If the child_stat matches the op, return
+      the information from the cache.  Otherwise, call op to generate
+      it. *)
+  val check : t -> string -> Dbunix.stat -> (unit -> (Hash.t * Dbunix.stat)) ->
+    (Hash.t * Dbunix.stat)
+
+end = struct
+  type t = {
+    cache : Seendb.t;
+    prior : Seendb.cache_entry;
+    add_skip : int64 -> unit;
+  }
+
+  let get cache dir_props add_skip =
+    let pino = Dbunix.get_int64 "ino" dir_props in
+    { cache = cache;
+      prior = Seendb.get cache pino;
+      add_skip = add_skip }
+
+  let check' c kind child_stat get_op =
+    let cino = Dbunix.get_int64 "ino" child_stat in
+    match Seendb.Int64Map.Exceptionless.find cino c.prior with
+      | None -> get_op ()
+      | Some node ->
+	let ctime = Dbunix.get_time "ctime" child_stat in
+	if node.Seendb.n_ctime = ctime then begin
+	  Log.debug (fun () -> "cache", ["ino", Int64.to_string cino;
+					 "hash", Hash.to_string node.Seendb.n_hash]);
+	  c.add_skip (Dbunix.get_int64 "size" child_stat);
+	  let stat' = StringMap.add "hash" (Hash.to_string node.Seendb.n_hash) child_stat in
+	  (node.Seendb.n_hash, stat')
+	end else get_op ()
+
+  let check c kind child_stat get_op = match kind with
+    | "REG" -> check' c kind child_stat get_op
+    | _ -> get_op ()
+end
+
 let store_file pool path =
   let ind = Indirect.make_indirect pool "ind" block_size in
   let rec read fd =
@@ -100,17 +148,7 @@ let save' pool cache backup_path atts =
 
   let rec walk path kind props =
     let props = match kind with
-      | "DIR" ->
-	let children = Dbunix.dir_with_stats path in
-	let children = List.filter (fun (name, _) ->
-	  name <> "." && name <> "..") children in
-	let buf = Indirect.Dir.make pool block_size in
-	List.iter (fun (name, (kind, props)) ->
-	  let path = Filename.concat path name in
-	  let hash = walk path kind props in
-	  Indirect.Dir.add buf name hash) children;
-	let child_hashes = Indirect.Dir.finish buf in
-	StringMap.add "children" (Hash.to_string child_hashes) props
+      | "DIR" -> get_dir path kind props
 
       | "REG" ->
 	let hash = store_file pool path in
@@ -122,9 +160,29 @@ let save' pool cache backup_path atts =
 
       | _ -> props
     in
-    Nodes.try_put pool (Nodes.NodeNode (kind, props)) in
+    (Nodes.try_put pool (Nodes.NodeNode (kind, props)), props)
 
-  let root_hash = walk backup_path "DIR" root_stat in
+  and get_dir path kind dir_props =
+    let dircache = Cache.get cache dir_props pool#add_skip in
+
+    let children = Dbunix.dir_with_stats path in
+    let children = List.filter (fun (name, _) ->
+      name <> "." && name <> "..") children in
+    let buf = Indirect.Dir.make pool block_size in
+
+    List.iter (fun (name, (child_kind, child_props)) ->
+      let (hash, child_props) = Cache.check dircache child_kind child_props
+	(fun () ->
+	  let path = Filename.concat path name in
+	  walk path child_kind child_props) in
+      Log.debug (fun () -> "add", ["name", name; "hash", Hash.to_string hash]);
+      Indirect.Dir.add buf name hash) children;
+    let child_hashes = Indirect.Dir.finish buf in
+    StringMap.add "children" (Hash.to_string child_hashes) dir_props
+
+  in
+
+  let (root_hash, _) = walk backup_path "DIR" root_stat in
   let atts = StringMap.add "hash" (Hash.to_string root_hash) atts in
 
   let hash = Nodes.try_put pool (Nodes.BackupNode (now, atts)) in
