@@ -31,11 +31,11 @@ let start_time = Unix.gettimeofday ()
 let randomize_expire () =
   start_time +. Random.float (28.0 *. 86400.0) +. (14.0 *. 86400.0)
 
-let entry_of_node props =
+let entry_of_node hash props =
   { n_inode = get_int64 "ino" props;
     n_ctime = get_time "ctime" props;
     n_expire = randomize_expire ();
-    n_hash = get_hash "data" props }
+    n_hash = hash }
 
 class seen_update_visitor db =
 object
@@ -70,7 +70,7 @@ object
 
     | Nodes.NodeNode ("REG", props) ->
       let top = Stack.top dirs in
-      let node = entry_of_node props in
+      let node = entry_of_node chunk#hash props in
       Stack.push node top
     | _ -> ()
 

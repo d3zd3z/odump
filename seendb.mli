@@ -21,9 +21,9 @@ type cache_entry = dir_node Int64Map.t
     match, the file is unlikely to have been changed.  The expire time is
     the date that this entry will expire. *)
 
-val entry_of_node : string Map.StringMap.t -> dir_node
-(** [entry_of_node props] takes the properties from a backup node and
-    extracts a dir_node from it, generating a fresh expiration. *)
+val entry_of_node : Hash.t -> string Map.StringMap.t -> dir_node
+(** [entry_of_node hash props] takes the properties from a backup node
+    and extracts a dir_node from it, generating a fresh expiration. *)
 
 val randomize_expire : unit -> float
 (** Return a randomized expiration time.  Randomization helps reduce
