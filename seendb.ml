@@ -5,28 +5,22 @@ open Batteries_uni
 let schema = {
   (* The schema version covers both the SQL schema, and the structure
      of the 'dir_node' list. *)
-  Db.schema_version = "1:2012-03-16";
+  Db.schema_version = "1:2012-03-18";
   Db.schema_text =
-    [| "create table seen (pino integer not null, expire double not null, \
+    [| "create table seen (pino integer primary key, expire double not null, \
 info blob not null)";
        "create index seen_index on seen(pino)";
        "create index seen_expire_index on seen(expire)" |]
 }
 
 module SM = Map.StringMap
-module I64Map = Map.Make(Int64)
+module Int64Map = Map.Make(Int64)
 
 type dir_node = {
   n_inode : int64;
   n_ctime : float;
   n_expire : float;
   n_hash : Hash.t
-}
-
-type dir_info = {
-  pino : int64;
-  min_expire : float;
-  nodes : dir_node list
 }
 
 let get_int64 key map = Int64.of_string (SM.find key map)
@@ -36,6 +30,12 @@ let get_hash key map = Hash.of_string (SM.find key map)
 let start_time = Unix.gettimeofday ()
 let randomize_expire () =
   start_time +. Random.float (28.0 *. 86400.0) +. (14.0 *. 86400.0)
+
+let entry_of_node props =
+  { n_inode = get_int64 "ino" props;
+    n_ctime = get_time "ctime" props;
+    n_expire = randomize_expire ();
+    n_hash = get_hash "data" props }
 
 class seen_update_visitor db =
 object
@@ -60,7 +60,7 @@ object
 	Db.sql0 db "delete from seen where pino = ?" [Db.Data.INT pino]
       else begin
 	let min_expire = List.fold_left (fun a n -> min a n.n_expire) max_float nodes in
-	Db.sql0 db "insert into seen values (?, ?, ?)"
+	Db.sql0 db "insert or replace into seen values (?, ?, ?)"
 	  [ Db.Data.INT pino;
 	    Db.Data.FLOAT min_expire;
 	    Db.Data.BLOB (Marshal.to_string nodes []) ]
@@ -70,11 +70,7 @@ object
 
     | Nodes.NodeNode ("REG", props) ->
       let top = Stack.top dirs in
-      let ctime = get_time "ctime" props in
-      let node = { n_inode = get_int64 "ino" props;
-		   n_ctime = ctime;
-		   n_expire = randomize_expire ();
-		   n_hash = get_hash "data" props } in
+      let node = entry_of_node props in
       Stack.push node top
     | _ -> ()
 
@@ -86,3 +82,47 @@ let make_cache pool cache_name node =
   let visit = new seen_update_visitor db in
   Nodes.walk pool "." node (visit :> Nodes.visitor);
   visit#commit
+
+(** {6 Update within backup} *)
+
+type t = Db.t
+type cache_entry = dir_node Int64Map.t
+
+let open_cache path = Db.connect path schema
+
+let close cache = Db.close cache
+
+let with_cache path f = with_dispose ~dispose:close f (open_cache path)
+
+let get cache pino =
+  match Db.sqln cache "select info from seen where pino = ?" [Db.Data.INT pino] with
+    | [ ] -> Int64Map.empty
+    | [ [| Db.Data.BLOB data |] ] ->
+      let nodes = (Marshal.from_string data 0 : dir_node list) in
+      let as_pair ({ n_inode } as node) = (n_inode, node) in
+      Int64Map.of_enum (Enum.map as_pair (List.enum nodes))
+    | [ items ] ->
+      let items = Array.to_list items in
+      let items = String.join ", " (List.map Db.Data.to_string_debug items) in
+      Log.failure ("Unexpected response from query",
+				["pino", Int64.to_string pino;
+				 "result", ("[| " ^ items ^ " |]")])
+    | _ -> Log.failure ("Not expecting multiple rows",
+			["pino", Int64.to_string pino])
+
+let update db pino entry =
+  if Int64Map.is_empty entry then
+    Db.sql0 db "delete from seen where pino = ?" [Db.Data.INT pino]
+  else begin
+    let nodes = Int64Map.enum entry in
+    let nodes = Enum.map Tuple.Tuple2.second nodes in
+    let nodes = List.of_enum nodes in
+    let min_expire = List.fold_left (fun a n -> min a n.n_expire) max_float nodes in
+    Db.sql0 db "insert or replace into seen values (?, ?, ?)"
+      [ Db.Data.INT pino;
+	Db.Data.FLOAT min_expire;
+	Db.Data.BLOB (Marshal.to_string nodes []) ]
+  end
+
+let begin_transaction db = Db.sql0 db "begin transaction" []
+let commit db = Db.sql0 db "commit" []

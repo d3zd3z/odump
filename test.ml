@@ -11,6 +11,7 @@ let all = "test" >::: [
   Test_dbunix.suite;
   Test_nodes.suite;
   Test_indirect.suite;
+  Test_seendb.suite;
 ]
 
 let _ = run_test_tt_main all

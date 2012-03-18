@@ -90,7 +90,7 @@ let store_file pool path =
   with_dispose ~dispose:Unix.close read (Dbunix.open_for_read path);
   Indirect.finish ind
 
-let save pool cache_dir backup_path atts =
+let save' pool cache backup_path atts =
   let pool = new write_track_pool pool in
   let now = Unix.gettimeofday () in
   let atts = decode_atts atts in
@@ -130,3 +130,6 @@ let save pool cache_dir backup_path atts =
   let hash = Nodes.try_put pool (Nodes.BackupNode (now, atts)) in
   pool#finish;
   Log.info (fun () -> "Completed backup", ["hash", Hash.to_string hash])
+
+let save pool cache_dir backup_path atts =
+  Seendb.with_cache cache_dir (fun cache -> save' pool cache backup_path atts)
