@@ -65,3 +65,43 @@ let finish ind =
   done;
   let top = Stack.pop ind.buffers in
   summarize ind top 0
+
+(* Builder for directories. *)
+module Dir = struct
+
+  let ind_add = add
+  let ind_finish = finish
+  type ind_t = t
+
+  module SM = Map.StringMap
+
+  type t = { pool: File_pool.t;
+	     limit: int;
+	     mutable buffer: Hash.t SM.t;
+	     mutable length: int;
+	     ind: ind_t }
+
+  let make pool limit = { pool = pool;
+			  limit = limit;
+			  buffer = SM.empty;
+			  length = 0;
+			  ind = make_indirect pool "dir" limit }
+
+  let ship dir =
+    if not (SM.is_empty dir.buffer) then begin
+      let node = Nodes.DirNode dir.buffer in
+      let hash = Nodes.try_put dir.pool node in
+      ind_add dir.ind hash
+    end
+
+  let add dir name hash =
+    let len = 22 + String.length name in
+    if dir.length + len > dir.limit then ship dir;
+    dir.length <- dir.length + len;
+    dir.buffer <- SM.add name hash dir.buffer
+
+  let finish dir =
+    ship dir;
+    ind_finish dir.ind
+
+end

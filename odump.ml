@@ -184,12 +184,18 @@ let pool_clone src_path dest_path hashes =
     File_pool.with_file_pool dest_path (fun dest_pool ->
       Clone.clone_trees src_pool dest_pool hashes))
 
+let dump pool_path backup_path atts =
+  File_pool.with_file_pool pool_path (fun pool ->
+    let cache = cache_path pool_path backup_path in
+    Backup.save pool cache backup_path atts)
+
 let main () =
   match Array.to_list Sys.argv with
     | [ _; "list"; path ] -> list path
     | [ _; "walk"; path; node ] -> walk path node
     | [ _; "du"; path; node ] -> du path node
     | [ _; "restore"; path; node; dest ] -> restore path node dest
+    | (_ :: "dump" :: path :: root :: att1 :: atts) -> dump path root (att1::atts)
     | [ _; "make-cache"; path; node; backup_dir ] -> make_cache path node backup_dir
     | [ _; "create-pool"; path ] -> create_pool path
     | (_ :: "clone" :: src_path :: dest_path :: hash1 :: hashes) ->

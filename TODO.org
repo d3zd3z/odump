@@ -16,8 +16,9 @@
 
    - [X] Generic walker code
    - [X] restore
-   - [ ] seen-db conversions
-   - [ ] backup
+   - [X] seen-db conversions
+   - [X] backup
+   - [ ] Use seen-db in backup
 
 ** Tasks to be comparable to jpool
 
@@ -28,6 +29,8 @@
    - [ ] 64-bit uid/gid (not sure this is ever necessary)
    - [ ] pool locking
    - [ ] pool hash verification
+   - [ ] don't cross device boundaries
+   - [ ] progress meter on backup
 
 ** Tasks to extend functionality
 
@@ -35,6 +38,7 @@
    - [ ] Tree comparisons
    - [ ] Write statistics on clone
    - [ ] Store canonical path in backup to make cache regeneration easier
+   - [ ] Exclusion lists
 
 ** Misc things (cleanups etc)
 
