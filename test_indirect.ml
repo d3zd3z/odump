@@ -36,7 +36,7 @@ let check_count pool count =
   let visitor = new check_visitor in
   Nodes.walk pool "." top visitor
 
-let creation pool =
+let creation path pool =
   check_count pool 1;
   check_count pool 2;
   check_count pool 200;

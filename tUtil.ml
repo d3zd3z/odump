@@ -52,7 +52,8 @@ let with_temp_dir op () =
 let with_temp_pool op =
   let op2 dir =
     File_pool.create_file_pool dir;
-    Std.with_dispose ~dispose:(fun p -> p#close) op (File_pool.open_file_pool dir) in
+    Std.with_dispose ~dispose:(fun p -> p#close) (fun p -> op dir p)
+      (File_pool.open_file_pool dir) in
  with_temp_dir op2
 
 (* This is biased a bit, but it doesn't really matter. *)
