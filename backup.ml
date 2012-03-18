@@ -25,7 +25,7 @@ let read_chunk fd =
   read 0
 
 let store_file pool path =
-  let ind = Indirect.make_indirect pool "ind" (256*1024) in
+  let ind = Indirect.make_indirect pool "ind" block_size in
   let rec read fd =
     let (data, eof) = read_chunk fd in
     let node = if String.length data = 0 then Nodes.NullNode
@@ -50,7 +50,7 @@ let save pool cache_dir backup_path atts =
 	let children = Dbunix.dir_with_stats path in
 	let children = List.filter (fun (name, _) ->
 	  name <> "." && name <> "..") children in
-	let buf = Indirect.Dir.make pool (256*1024) in
+	let buf = Indirect.Dir.make pool block_size in
 	List.iter (fun (name, (kind, props)) ->
 	  let props = StringMap.of_enum (List.enum props) in
 	  let path = Filename.concat path name in
