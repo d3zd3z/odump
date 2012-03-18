@@ -97,7 +97,6 @@ let save pool cache_dir backup_path atts =
   let root_stat = match Dbunix.lstat backup_path with
     | ("DIR", stat) -> stat
     | (kind, _) -> Log.failure ("Root of backup is not a DIR", ["kind", kind]) in
-  let root_stat = StringMap.of_enum (List.enum root_stat) in
 
   let rec walk path kind props =
     let props = match kind with
@@ -107,7 +106,6 @@ let save pool cache_dir backup_path atts =
 	  name <> "." && name <> "..") children in
 	let buf = Indirect.Dir.make pool block_size in
 	List.iter (fun (name, (kind, props)) ->
-	  let props = StringMap.of_enum (List.enum props) in
 	  let path = Filename.concat path name in
 	  let hash = walk path kind props in
 	  Indirect.Dir.add buf name hash) children;

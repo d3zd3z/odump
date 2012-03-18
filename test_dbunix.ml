@@ -15,8 +15,7 @@ let readdir () =
 
 (* Perform a basic sanity test of lstat. *)
 let lstat () =
-  let (kind, sbuf) = Dbunix.lstat "." in
-  let map = SM.of_enum (List.enum sbuf) in
+  let (kind, map) = Dbunix.lstat "." in
   let real_stat = Unix.lstat "." in   (* There is a race here. *)
   assert_equal kind "DIR";
 

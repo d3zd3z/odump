@@ -13,7 +13,7 @@ val open_for_read : string -> file_descr
 (* Convenience utility *)
 val get_directory_contents : string -> (string * int64) list
 
-type stat_info = string * (string * string) list
+type stat_info = string * string Map.StringMap.t
 val lstat : string -> stat_info
 
 val dir_with_stats : string -> (string * stat_info) list

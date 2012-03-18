@@ -7,7 +7,10 @@ type dir_handle = Unix.dir_handle
 let opendir = Unix.opendir
 external readdir : dir_handle -> (string * int64) = "db_readdir"
 let closedir = Unix.closedir
-external lstat : string -> (string * (string * string) list) = "db_lstat"
+external raw_lstat : string -> (string * (string * string) list) = "db_lstat"
+let lstat path =
+  match raw_lstat path with
+    | (kind, props) -> (kind, SM.of_enum (List.enum props))
 
 type file_descr = Unix.file_descr
 external open_for_read : string -> file_descr = "db_open_for_read"
@@ -28,7 +31,7 @@ let get_directory_contents path =
   closedir hand;
   !result
 
-type stat_info = string * (string * string) list
+type stat_info = string * string SM.t
 let dir_with_stats path =
   let inames = get_directory_contents path in
   let inames = List.sort ~cmp:(fun (_, a) (_, b) -> Int64.compare a b) inames in

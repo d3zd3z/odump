@@ -51,6 +51,7 @@
      probably only want to verify them when explicitly asked to, or
      perhaps when restoring.
    - [ ] Progress meter on multiple-clones doesn't cleanup properly.
+   - [ ] Disable progress meter on unit tests
 
 ** Problem with jpool
 
