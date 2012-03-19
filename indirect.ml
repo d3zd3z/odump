@@ -91,7 +91,9 @@ module Dir = struct
     if not (SM.is_empty dir.buffer) then begin
       let node = Nodes.DirNode dir.buffer in
       let hash = Nodes.try_put dir.pool node in
-      ind_add dir.ind hash
+      ind_add dir.ind hash;
+      dir.buffer <- SM.empty;
+      dir.length <- 0
     end
 
   let add dir name hash =
