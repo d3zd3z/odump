@@ -18,7 +18,7 @@
    - [X] restore
    - [X] seen-db conversions
    - [X] backup
-   - [ ] Use seen-db in backup
+   - [X] Use seen-db in backup
 
 ** Tasks to be comparable to jpool
 
@@ -54,6 +54,8 @@
      perhaps when restoring.
    - [ ] Progress meter on multiple-clones doesn't cleanup properly.
    - [ ] Disable progress meter on unit tests
+   - [ ] Nicer timestamps in log messages
+   - [ ] Proper command line processing
 
 ** Problem with jpool
 
