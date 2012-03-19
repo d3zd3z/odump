@@ -59,7 +59,7 @@ object
       if nodes = [] then
 	Db.sql0 db "delete from seen where pino = ?" [Db.Data.INT pino]
       else begin
-	let min_expire = List.fold_left (fun a n -> min a n.n_expire) max_float nodes in
+	let min_expire = List.fold_left (fun a n -> max a n.n_expire) min_float nodes in
 	Db.sql0 db "insert or replace into seen values (?, ?, ?)"
 	  [ Db.Data.INT pino;
 	    Db.Data.FLOAT min_expire;
@@ -121,7 +121,7 @@ let update db pino entry =
     let nodes = Int64Map.enum entry in
     let nodes = Enum.map Tuple.Tuple2.second nodes in
     let nodes = List.of_enum nodes in
-    let min_expire = List.fold_left (fun a n -> min a n.n_expire) max_float nodes in
+    let min_expire = List.fold_left (fun a n -> max a n.n_expire) min_float nodes in
     Db.sql0 db "insert or replace into seen values (?, ?, ?)"
       [ Db.Data.INT pino;
 	Db.Data.FLOAT min_expire;
