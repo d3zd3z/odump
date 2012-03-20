@@ -189,25 +189,15 @@ let dump pool_path backup_path atts =
     let cache = cache_path pool_path backup_path in
     Backup.save pool cache backup_path atts)
 
-(* Sigh.  The 'Arg.command' is private to the Batteries Arg library,
-   which means we can't get the information out to generate help.  So,
-   force a cast.  Unfortunately, this will crash if the type changes
-   in Arg. *)
-type secret_command = {
-  doc : string;
-  kwd : string;
-  spec : Arg.spec }
-let of_command c =
-  let c = Obj.magic c in
-  (c.kwd, c.spec, c.doc)
+(** {4 Argument processing} *)
 
 type command = {
   usage: string;
-  args: Arg.command list;
+  args: (Arg.key * Arg.spec * Arg.doc) list;
   action: (unit -> unit) -> string list -> unit }
 
 let pool = ref ""
-let pool_arg = Arg.command ~doc:"Path to storage pool" "-pool" (Arg.Set_string pool)
+let pool_arg = ("-pool", Arg.Set_string pool, "Path to storage pool")
 let must_pool usage =
   if !pool = "" then begin
     eprintf "Must specify a pool with -pool\n";
@@ -291,7 +281,7 @@ let main () =
   (* Scan the arguments, stopping at the first anonymous argument.
      This parses the arguments up until the command name. *)
   let global_usage = usage () in
-  let global_args = [ of_command pool_arg ] in
+  let global_args = [ pool_arg ] in
   begin try Arg.parse global_args (fun arg -> raise Got_command) global_usage;
 	    Arg.usage global_args global_usage;
 	    exit 1
@@ -303,10 +293,12 @@ let main () =
       Arg.usage [] global_usage;
       exit 1
     | Some command ->
-      let rest = Arg.handle ~usage:command.usage command.args in
+      let args = ref [] in
+      let add_arg arg = args := arg :: !args in
+      Arg.parse command.args add_arg command.usage;
       let show_use = fun () ->
-	Arg.usage (List.map of_command command.args) command.usage;
+	Arg.usage command.args command.usage;
 	exit 1 in
-      command.action show_use rest
+      command.action show_use (List.rev !args)
 
 let _ = main ()
