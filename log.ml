@@ -27,7 +27,12 @@ let count_chars text ch =
   done;
   !count
 
-let clear_progress () =
+let null_meter () = ""
+let current_meter = ref null_meter
+
+let set_meter meter = current_meter := meter
+
+let clear_meter () =
   if !last_progress_lines > 0 then begin
     Printf.fprintf stderr "\x1b[%dA\x1b[J" !last_progress_lines;
     (* flush stderr; *)
@@ -36,7 +41,7 @@ let clear_progress () =
 
 let show_progress text =
   if has_console then begin
-    clear_progress ();
+    clear_meter ();
     last_progress_lines := count_chars text '\n';
     last_progress := text;
     output_string stderr text;
@@ -47,7 +52,7 @@ let show_progress text =
    progress meter. *)
 let with_output f =
   let prior_count = !last_progress_lines in
-  clear_progress ();
+  clear_meter ();
   flush stderr;
   f ();
   flush stdout;
@@ -69,20 +74,30 @@ let event_to_string log level (desc, parms) time =
 
 let mingled_formatter log level event time =
   let text = event_to_string log level event time in
-  let prior_count = !last_progress_lines in
-  clear_progress ();
-  output_string stderr text;
-  if prior_count > 0 then
-    show_progress !last_progress
-  else
-    flush stderr
-
-(* Print a simple message to stdout, interleaving correctly with any
-   progress meter. *)
+  with_output (fun () -> output_string stderr text)
 
 (* Register a formater that intermingles correctly with the progress
    meter. *)
 let _ = init ["odump", INFO] mingled_formatter
+
+let last_update = ref (Unix.gettimeofday ())
+
+let update_meter () =
+  let now = Unix.time () in
+  if now > !last_update then begin
+    show_progress ((!current_meter) ());
+    last_update := now
+  end
+
+let restore_meter () =
+  if !last_progress_lines = 0 then
+    show_progress ((!current_meter) ())
+
+let finish_meter () =
+  clear_meter ();
+  restore_meter ();
+  last_progress_lines := 0;
+  last_progress := ""
 
 class type meter_type = object
   method get_text : string
@@ -94,27 +109,10 @@ end
 
 class virtual meter =
 object (self)
-  val mutable last_update = Unix.time ()
-  val start_time = Unix.gettimeofday ()
-
   method virtual get_text: string
-
-  method update =
-    let now = Unix.time () in
-    if now > last_update then begin
-      show_progress self#get_text;
-      last_update <- now
-    end
-
-  method force =
-    show_progress self#get_text;
-    last_update <- Unix.time ()
-
-  method clear =
-    clear_progress ()
-
-  method finish =
-    self#force;
-    last_progress_lines := 0;
-    last_progress := ""
+  initializer set_meter (fun () -> self#get_text)
+  method update = update_meter ()
+  method force = clear_meter (); restore_meter ()
+  method clear = clear_meter ()
+  method finish = finish_meter ()
 end

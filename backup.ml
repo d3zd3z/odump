@@ -8,6 +8,7 @@ module StringMap = Map.StringMap
 class write_track_pool (inner : #Pool.writable) =
 object (self)
   inherit Log.meter
+  val start_time = Unix.gettimeofday ()
 
   val mutable count = 0L
   val mutable compressed = 0L

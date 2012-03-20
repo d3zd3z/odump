@@ -93,6 +93,7 @@ end
 
 class node_meter =
 object
+  val start_time = Unix.gettimeofday ()
   inherit Log.meter
   val mutable count = 0L
   val mutable compressed = 0L
