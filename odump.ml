@@ -124,8 +124,8 @@ object (self)
     let each kind info =
       printf "%4s %15Ld (%s)   %15Ld (%s)  (%Ld)\n"
 	kind
-	info.du_data (Misc.nice_number info.du_data)
-	info.du_write (Misc.nice_number info.du_write)
+	info.du_data (Log.nice_number info.du_data)
+	info.du_write (Log.nice_number info.du_write)
 	info.du_count in
     StringMap.iter each sizes;
     printf "\n"

@@ -7,7 +7,6 @@ module StringMap = Map.StringMap
 (* Wrap a storage pool in a tracker that monitors a progress meter. *)
 class write_track_pool (inner : #Pool.writable) =
 object (self)
-  inherit Log.meter
   val start_time = Unix.gettimeofday ()
 
   val mutable count = 0L
@@ -17,26 +16,20 @@ object (self)
   val mutable skip = 0L
 
   (* TODO: How to share this with the node meter. *)
-  method get_text =
-    let now = Unix.gettimeofday () in
-    let out = IO.output_string () in
-    let fmt = Format.formatter_of_output out in
-    Format.fprintf fmt "%9Ld nodes" count;
-    let funcompressed = Int64.to_float uncompressed in
-    let fcompressed = Int64.to_float compressed in
-    let rate = funcompressed /. (now -. start_time) in
-    let zrate = fcompressed /. (now -. start_time) in
-    let ratio = ((funcompressed -. fcompressed) /. funcompressed) *. 100.0 in
-    let total = Int64.add uncompressed (Int64.add dup skip) in
-    Format.fprintf fmt ", %s dup, %s skip, %s total@\n"
-      (Misc.nice_number dup) (Misc.nice_number skip) (Misc.nice_number total);
-    Format.fprintf fmt "  %s uncompressed (%s/sec)@\n"
-      (Misc.nice_number uncompressed)
-      (Misc.fnice_number rate);
-    Format.fprintf fmt "  %s compressed   (%s/sec)  %.1f%%@."
-      (Misc.nice_number compressed)
-      (Misc.fnice_number zrate) ratio;
-    IO.close_out out
+  initializer (
+    let show fmt =
+      let age = Unix.gettimeofday () -. start_time in
+      let total = Int64.add uncompressed (Int64.add dup skip) in
+      Format.fprintf fmt "%9Ld nodes, " count;
+      Log.format_size fmt "%s dup, " dup;
+      Log.format_size fmt "%s skip, " skip;
+      Log.format_size fmt "%s total@\n" total;
+      Log.format_size_rate fmt "  %s uncompressed (%s/sec)@\n" uncompressed age;
+      Log.format_size_rate fmt "  %s compressed   (%s/sec)  " compressed age;
+      Log.format_ratio fmt "%.1f%%@." uncompressed compressed in
+    Log.set_meter (Log.build_format_meter show))
+
+  method finish = Log.finish_meter ()
 
   method add chunk =
     count <- Int64.succ count;
@@ -47,11 +40,11 @@ object (self)
       uncompressed <- Int64.add uncompressed (Int64.of_int chunk#data_length);
       inner#add chunk
     end;
-    self#update
+    Log.update_meter ()
 
   method add_skip size =
     skip <- Int64.add skip size;
-    self#update
+    Log.update_meter ()
 
   method mem = inner#mem
   method find = inner#find

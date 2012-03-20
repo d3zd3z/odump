@@ -99,20 +99,33 @@ let finish_meter () =
   last_progress_lines := 0;
   last_progress := ""
 
-class type meter_type = object
-  method get_text : string
-  method clear : unit
-  method force : unit
-  method update : unit
-  method finish : unit
-end
+let build_format_meter f () =
+  let out = IO.output_string () in
+  let fmt = Format.formatter_of_output out in
+  f fmt;
+  IO.close_out out
 
-class virtual meter =
-object (self)
-  method virtual get_text: string
-  initializer set_meter (fun () -> self#get_text)
-  method update = update_meter ()
-  method force = clear_meter (); restore_meter ()
-  method clear = clear_meter ()
-  method finish = finish_meter ()
-end
+(* Units for nicely printing sizes.  YiB would take 70 bits, so cannot
+   be reached by a 64-bit number. *)
+let units = ["B"; "Kib"; "MiB"; "GiB"; "TiB"; "PiB"; "EiB"; "ZiB"; "YiB"]
+let fnice_number num =
+  let rec loop num units =
+    if abs_float num > 1024.0 then loop (num /. 1024.0) (List.tl units)
+    else (num, List.hd units) in
+  let (num, unit) = loop num units in
+  Printf.sprintf "%6.1f%-3s" num unit
+
+let nice_number num = fnice_number (Int64.to_float num)
+
+let format_size f fmt size =
+  Format.fprintf f fmt (nice_number size)
+
+let format_size_rate f fmt size age =
+  let rate = (Int64.to_float size) /. age in
+  Format.fprintf f fmt (nice_number size) (fnice_number rate)
+
+let format_ratio f fmt before after =
+  let fbefore = Int64.to_float before in
+  let fafter = Int64.to_float after in
+  let ratio = ((fbefore -. fafter) /. fbefore) *. 100.0 in
+  Format.fprintf f fmt ratio

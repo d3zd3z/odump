@@ -31,21 +31,21 @@ val restore_meter : unit -> unit
 val finish_meter : unit -> unit
 val null_meter : unit -> string
 
-class type meter_type = object
-  method get_text : string
-  method clear : unit
-  method force : unit
-  method update : unit
-  method finish : unit
-end
+(* Build a meter up that formats. *)
+val build_format_meter : (Format.formatter -> unit) -> (unit -> string)
 
-(* Progress meter support.  Implement [#get_text] and call [#update]
-   to implement a meter. *)
-class virtual meter :
-object
-  method virtual get_text : string
-  method clear : unit
-  method force : unit
-  method update : unit
-  method finish : unit
-end
+(* Some useful formatters *)
+val nice_number : int64 -> string
+val fnice_number : float -> string
+val format_size :
+  Format.formatter ->
+  (string -> unit, Format.formatter, unit) format ->
+  int64 -> unit
+val format_size_rate :
+  Format.formatter ->
+  (string -> string -> unit, Format.formatter, unit) format ->
+  int64 -> float -> unit
+val format_ratio :
+  Format.formatter ->
+  (float -> unit, Format.formatter, unit) format ->
+  int64 -> int64 -> unit

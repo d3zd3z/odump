@@ -94,7 +94,6 @@ end
 class node_meter =
 object
   val start_time = Unix.gettimeofday ()
-  inherit Log.meter
   val mutable count = 0L
   val mutable compressed = 0L
   val mutable uncompressed = 0L
@@ -110,30 +109,26 @@ object
   method add_dir = dirs <- Int64.succ dirs
   method add_nondir = nondirs <- Int64.succ nondirs
 
-  method get_text =
-    let now = Unix.gettimeofday () in
-    let out = IO.output_string () in
-    let fmt = Format.formatter_of_output out in
-    Format.fprintf fmt "%9Ld nodes, %Ld dirs, %Ld nondirs" count dirs nondirs;
-    let funcomp = Int64.to_float uncompressed in
-    let fcomp = Int64.to_float compressed in
-    let rate = funcomp /. (now -. start_time) in
-    let zrate = fcomp /. (now -. start_time) in
-    let ratio = ((funcomp -. fcomp) /. funcomp) *. 100.0 in
-    Format.fprintf fmt " @ %s uncompressed (%s/sec)"
-      (Misc.nice_number uncompressed)
-      (Misc.fnice_number rate);
-    Format.fprintf fmt "@\n%s compressed   (%s/sec)  %.1f%%"
-      (Misc.nice_number compressed)
-      (Misc.fnice_number zrate)
-      ratio;
-    Format.fprintf fmt "@.";
-    IO.close_out out
+  method register =
+    let show fmt =
+      let age = Unix.gettimeofday () -. start_time in
+      Format.fprintf fmt "%9Ld nodes, %9Ld dirs, %9Ld nondirs@\n" count dirs nondirs;
+      Log.format_size_rate fmt " %s uncompressed (%s/sec)@\n" uncompressed age;
+      Log.format_size_rate fmt " %s compressed   (%s/sec)" compressed age;
+      Log.format_ratio fmt "  %.1f%%@." uncompressed compressed in
+    Log.set_meter (Log.build_format_meter show)
+
+  method update = Log.update_meter ()
+
+  method unregister =
+    Log.finish_meter ();
+    Log.set_meter Log.null_meter
 end
 
 let walk (pool : #Pool.readable) path hash (visitor : visitor) =
   let full_data = visitor#want_full_data in
   let meter = new node_meter in
+  meter#register;
   let rec descend path hash =
     let (chunk_get, info_get, kind) = Option.get (pool#find_full hash) in
     if (not full_data) && kind == "blob" then
@@ -173,7 +168,7 @@ let walk (pool : #Pool.readable) path hash (visitor : visitor) =
       visitor#leave path chunk node
     end
   in descend path hash;
-  meter#finish
+  meter#unregister
 
 let encode_dir children =
   let buf = Buffer.create 128 in
