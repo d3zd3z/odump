@@ -5,7 +5,7 @@ open Batteries_uni
 module StringMap = Map.StringMap
 
 (* Wrap a storage pool in a tracker that monitors a progress meter. *)
-class write_track_pool (inner : #File_pool.file_pool) =
+class write_track_pool (inner : #Pool.writable) =
 object (self)
   inherit Log.meter
 

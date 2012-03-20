@@ -6,7 +6,7 @@ val with_temp_dir: (string -> 'a) -> unit -> 'a
     the temporary directory before returning the value returned by
     [op]. *)
 
-val with_temp_pool: (string -> File_pool.file_pool -> 'a) -> unit -> 'a
+val with_temp_pool: (string -> Pool.writable -> 'a) -> unit -> 'a
 (** [TUtil.with_temp_pool op] Creates a temporary directory, and then
     a pool within it, and calls [op] passing the path of the pool and
     the pool.  Cleans up when [op] returns. *)

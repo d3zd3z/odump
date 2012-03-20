@@ -2,7 +2,7 @@
 
 open Batteries_uni
 
-val make_cache : #File_pool.file_pool -> string -> Hash.t -> unit
+val make_cache : #Pool.writable -> string -> Hash.t -> unit
 (** [make_cache pool path hash] updates the seen database at the given
     path with data from the specified backup. *)
 

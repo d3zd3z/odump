@@ -3,7 +3,7 @@
 open Batteries_uni
 
 type t = {
-  pool: File_pool.t;
+  pool: Pool.writable;
   limit: int;
   prefix: string;
   buffers: Buffer.t Stack.t }
@@ -13,7 +13,7 @@ let make_indirect pool prefix limit =
   let core = Buffer.create limit in
   let buffers = Stack.create () in
   Stack.push core buffers;
-  { pool = (pool :> File_pool.t); prefix = prefix; limit = limit;
+  { pool = (pool :> Pool.writable); prefix = prefix; limit = limit;
     buffers = buffers }
 
 (* Push a new buffer level, containing the initial hash. *)
@@ -75,13 +75,13 @@ module Dir = struct
 
   module SM = Map.StringMap
 
-  type t = { pool: File_pool.t;
+  type t = { pool: Pool.writable;
 	     limit: int;
 	     mutable buffer: Hash.t SM.t;
 	     mutable length: int;
 	     ind: ind_t }
 
-  let make pool limit = { pool = (pool :> File_pool.t);
+  let make pool limit = { pool = (pool :> Pool.writable);
 			  limit = limit;
 			  buffer = SM.empty;
 			  length = 0;
