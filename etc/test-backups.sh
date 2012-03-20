@@ -23,14 +23,14 @@ dest=/tmp/restore
 # Backup base
 rm -rf $pool
 mkdir $pool
-$odump create-pool $pool
+$odump -pool $pool create-pool
 
 (cd $src; git checkout --quiet $srcrev1; gosure scan)
-$odump dump $pool $src phase=1
-hash=$($odump list $pool | tail -1 | awk '{print $1;}')
+$odump -pool $pool dump $src phase=1
+hash=$($odump -pool $pool list | tail -1 | awk '{print $1;}')
 rm -rf $dest
 mkdir $dest
-$odump restore $pool $hash $dest
+$odump -pool $pool restore $hash $dest
 
 # This sleep shouldn't be needed if we are really storing the fine-grained time.
 sleep 1   # Needed to make sure times advance.
@@ -40,15 +40,15 @@ sleep 1   # Needed to make sure times advance.
 # TESTA: remove the seen database, and recreate it.
 # Can also test a fresh write by not doing these two steps.
 rm $pool/seen/*.sqlite
-$odump make-cache $pool $hash $src
+$odump -pool $pool make-cache $hash $src
 
 # Phase 2, different branch.
 (cd $src; git checkout --quiet $srcrev2; gosure update)
-$odump dump $pool $src phase=2
-hash=$($odump list $pool | tail -1 | awk '{print $1;}')
+$odump dump -pool $pool $src phase=2
+hash=$($odump list -pool $pool | tail -1 | awk '{print $1;}')
 rm -rf $dest
 mkdir $dest
-$odump restore $pool $hash $dest
+$odump restore -pool $pool $hash $dest
 
 echo ''
 echo 'Checking restore'
@@ -56,11 +56,11 @@ echo 'Checking restore'
 
 # Phase 3, different branch.
 (cd $src; git checkout --quiet $srcrev3; gosure update)
-$odump dump $pool $src phase=3
-hash=$($odump list $pool | tail -1 | awk '{print $1;}')
+$odump dump -pool $pool $src phase=3
+hash=$($odump list -pool $pool | tail -1 | awk '{print $1;}')
 rm -rf $dest
 mkdir $dest
-$odump restore $pool $hash $dest
+$odump restore -pool $pool $hash $dest
 
 echo ''
 echo 'Checking restore'

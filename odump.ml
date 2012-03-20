@@ -189,17 +189,124 @@ let dump pool_path backup_path atts =
     let cache = cache_path pool_path backup_path in
     Backup.save pool cache backup_path atts)
 
+(* Sigh.  The 'Arg.command' is private to the Batteries Arg library,
+   which means we can't get the information out to generate help.  So,
+   force a cast.  Unfortunately, this will crash if the type changes
+   in Arg. *)
+type secret_command = {
+  doc : string;
+  kwd : string;
+  spec : Arg.spec }
+let of_command c =
+  let c = Obj.magic c in
+  (c.kwd, c.spec, c.doc)
+
+type command = {
+  usage: string;
+  args: Arg.command list;
+  action: (unit -> unit) -> string list -> unit }
+
+let pool = ref ""
+let pool_arg = Arg.command ~doc:"Path to storage pool" "-pool" (Arg.Set_string pool)
+let must_pool usage =
+  if !pool = "" then begin
+    eprintf "Must specify a pool with -pool\n";
+    usage ()
+  end
+
+let command_list usage = function
+  | [] -> must_pool usage; list !pool
+  | _ -> usage ()
+
+let command_make_cache usage = function
+  | [node; backup_dir] -> must_pool usage; make_cache !pool node backup_dir
+  | _ -> usage ()
+
+let command_du usage = function
+  | [node] -> must_pool usage; du !pool node
+  | _ -> usage ()
+
+let command_restore usage = function
+  | [node; dest] -> must_pool usage; restore !pool node dest
+  | _ -> usage ()
+
+let command_dump usage = function
+  | (root :: att1 :: atts) -> must_pool usage; dump !pool root (att1::atts)
+  | _ -> usage ()
+
+let command_create_pool usage = function
+  | [] -> must_pool usage; create_pool !pool
+  | _ -> usage ()
+
+let command_clone usage = function
+  | (dest_path :: hash1 :: hashes) -> must_pool usage; pool_clone !pool dest_path (hash1 :: hashes)
+  | _ -> usage ()
+
+let command_walk usage = function
+  | [node] -> must_pool usage; walk !pool node
+  | _ -> usage ()
+
+let commands = Map.StringMap.of_enum (List.enum [
+  "list", { usage = "List backups available in a pool";
+	    args = [ pool_arg ];
+	    action = command_list };
+  "make-cache", { usage = "Update a visited file cache";
+		  args = [ pool_arg ];
+		  action = command_make_cache };
+  "du", { usage = "Show space used";
+	  args = [ pool_arg ];
+	  action = command_du };
+  "restore", { usage = "restore -pool <path> <hash> <destdir>";
+	       args = [ pool_arg ];
+	       action = command_restore };
+  "dump", { usage = "dump -pool <path> <root> key=value ...";
+	    args = [ pool_arg ];
+	    action = command_dump };
+  "create-pool", { usage = "create-pool -pool <path>";
+		   args = [ pool_arg ];
+		   action = command_create_pool };
+  "clone", { usage = "clone -pool <path> <dest-pool-path> <hashes>";
+	     args = [ pool_arg ];
+	     action = command_clone };
+  "walk", { usage = "walk -pool <path> <hash>";
+	    args = [ pool_arg ];
+	    action = command_walk };
+])
+
+let usage () =
+  let out = IO.output_string () in
+  let fmt = Format.formatter_of_output out in
+  let names = Map.StringMap.enum commands in
+  Format.fprintf fmt "usage: odump <command> [<args>]@\n@\n";
+  Format.fprintf fmt "commands: @[";
+  Enum.iter (fun (name, {usage}) -> Format.fprintf fmt "%-12s %s@\n" name usage) names;
+  Format.fprintf fmt "@]@\n";
+  Format.fprintf fmt "Use 'odump command --help' for more information on a specific command.@\n@\n";
+  Format.fprintf fmt "Global options:";
+  IO.close_out out
+
+exception Got_command
+
 let main () =
-  match Array.to_list Sys.argv with
-    | [ _; "list"; path ] -> list path
-    | [ _; "walk"; path; node ] -> walk path node
-    | [ _; "du"; path; node ] -> du path node
-    | [ _; "restore"; path; node; dest ] -> restore path node dest
-    | (_ :: "dump" :: path :: root :: att1 :: atts) -> dump path root (att1::atts)
-    | [ _; "make-cache"; path; node; backup_dir ] -> make_cache path node backup_dir
-    | [ _; "create-pool"; path ] -> create_pool path
-    | (_ :: "clone" :: src_path :: dest_path :: hash1 :: hashes) ->
-      pool_clone src_path dest_path (hash1 :: hashes)
-    | _ -> Log.failure ("Incorrect usage", [])
+  (* Scan the arguments, stopping at the first anonymous argument.
+     This parses the arguments up until the command name. *)
+  let global_usage = usage () in
+  let global_args = [ of_command pool_arg ] in
+  begin try Arg.parse global_args (fun arg -> raise Got_command) global_usage;
+	    Arg.usage global_args global_usage;
+	    exit 1
+    with Got_command -> ()
+  end;
+  match Map.StringMap.Exceptionless.find Sys.argv.(!Arg.current) commands with
+    | None ->
+      eprintf "Unknown command: '%s'\n" Sys.argv.(!Arg.current);
+      Arg.usage [] global_usage;
+      exit 1
+    | Some command ->
+      let rest = Arg.handle ~usage:command.usage command.args in
+      let show_use = fun () ->
+	Arg.usage (List.map of_command command.args) command.usage;
+	exit 1 in
+      command.action show_use rest
 
 let _ = main ()

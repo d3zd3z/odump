@@ -56,10 +56,24 @@
    - [ ] Progress meter on multiple-clones doesn't cleanup properly.
    - [ ] Disable progress meter on unit tests
    - [ ] Nicer timestamps in log messages
-   - [ ] Proper command line processing
+   - [X] Proper command line processing
    - [ ] Custom progress meter for clone as well  The whole meter
      needs to be cleaned up a bit, perhaps made into a functor/module
      instead of done with classes.
+   - [ ] Improve UI for cache creation.  Allow the user to specify the
+     destination name of the new cache, which will be useful for
+     remote backups.  Provide a utility to ask for the cache path of a
+     given name.
+
+   - [ ] Store the backups last done into the seen cache.  Detect if
+     one is missing (or out of date), and refresh it by walking the
+     current backup.  This approach will work well for network
+     backups.  Need to solve the notion of canonical names for backups
+     so we can definitively refer to older backups.
+
+   - [ ] Distinguish short help text from long help.
+   - [ ] Don't use the Batteries handler, but use the exposed argument
+     spec type.
 
 ** Big things
 
