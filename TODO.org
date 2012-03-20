@@ -27,7 +27,7 @@
    - [X] clone command
    - [X] index recovery
    - [ ] 64-bit uid/gid (not sure this is ever necessary)
-   - [ ] pool locking
+   - [X] pool locking
    - [ ] pool hash verification
    - [ ] don't cross device boundaries
    - [X] progress meter on backup
@@ -41,6 +41,7 @@
    - [ ] Write statistics on clone
    - [ ] Store canonical path in backup to make cache regeneration easier
    - [ ] Exclusion lists
+   - [ ] read-only open of pool, with read locking
 
 ** Misc things (cleanups etc)
 

@@ -116,6 +116,25 @@ let get_number name =
   let pos = Str.search_backward number_re name (String.length name) in
   int_of_string (String.sub name pos 4)
 
+(* Open a file and lock it.  As long as everyone uses this same
+   locking protocol, then the pool will be safe from concurrent
+   access.  Returns the descriptor, appropriate for calling
+   release_lock later. *)
+let open_lock path =
+  let fd = Unix.openfile path [Unix.O_RDWR; Unix.O_CREAT] 0o644 in
+  Unix.set_close_on_exec fd;
+  (* Wait? *)
+  begin try Unix.lockf fd Unix.F_TLOCK 0 with
+    | Unix.Unix_error (e, _, _) ->
+      Log.failure ("Unable to get pool lock", ["path", path;
+					       "error", Unix.error_message e])
+  end;
+  fd
+
+let release_lock fd =
+  Unix.lockf fd Unix.F_ULOCK 0;
+  Unix.close fd
+
 (* TODO: Handle newfile. *)
 class type file_pool =
 object
@@ -139,6 +158,8 @@ let open_file_pool path =
   Misc.ensure_directory ~what:"pool" path;
   let metadata = Filename.concat path "metadata" in
   let props_name = Filename.concat metadata "props.txt" in
+
+  let lock_fd = open_lock (Filename.concat path "lock") in
 
 object (self)
   val mutable props = decode_backup_properties **> read_flat_properties props_name
@@ -229,7 +250,8 @@ object (self)
 
   method close =
     self#flush;
-    List.iter (fun n -> n.n_file#close) nodes
+    List.iter (fun n -> n.n_file#close) nodes;
+    release_lock lock_fd
 
   method get_backups =
     let backups_name = Filename.concat metadata "backups.txt" in
