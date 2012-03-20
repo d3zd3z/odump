@@ -112,7 +112,7 @@ object (self)
       info.Chunk.in_data_length
       info.Chunk.in_write_size
 
-  method show_result (pool : Pool.writable) hash =
+  method show_result : 'a. (#Pool.readable as 'a) -> Hash.t -> unit = fun pool hash ->
     (* printf "seen size: %d\n" (Size.size_b seen); *)
     (* Display.display "debug.dot" seen; *)
     let node = Nodes.get pool hash in

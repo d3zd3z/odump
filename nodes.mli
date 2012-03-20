@@ -14,7 +14,7 @@ type node =
   | NullNode
   | BlobNode of string
 
-val get : #Pool.writable -> Hash.t -> node
+val get : #Pool.readable -> Hash.t -> node
 
 val put : #Pool.writable -> node -> Hash.t
 (** [put pool node] Writes the node encoded into the pool.  Does not
@@ -44,4 +44,4 @@ class virtual empty_visitor : visitor
     visitor has [#want_full_data] as [true], then enter/leave will be
     called for each data chunk, otherwise the info about the data
     chunks will be passed to [#data_summary]. *)
-val walk : #Pool.writable -> string -> Hash.t -> visitor -> unit
+val walk : #Pool.readable -> string -> Hash.t -> visitor -> unit

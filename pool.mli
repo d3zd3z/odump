@@ -1,12 +1,9 @@
 (* General storage pools *)
 
-(** A Storage pool that can be written to. *)
-class type writable =
+(** A [readable] pool is a source of chunks. *)
+class type readable =
 object
-  method add : Chunk.t -> unit
-  (** [add chunk] adds the given chunk to the storage pool.  If the
-      chunk is already present, does nothing. *)
-
+  (** General queries of the pool. *)
   method mem : Hash.t -> bool
   method find : Hash.t -> Chunk.t
   method find_option : Hash.t -> Chunk.t option
@@ -28,7 +25,21 @@ object
       change. *)
 
   method get_backups : Hash.t list
+  (** Returns a list of the hashes of chunks that were written with a
+      kind of "back". *)
+
+  method close : unit
+end
+
+(** A [writable] pool can also have chunks written to it. *)
+class type writable =
+object
+  (* All writable pools can be read from. *)
+  inherit readable
+
+  method add : Chunk.t -> unit
+  (** [add chunk] adds the given chunk to the storage pool.  If the
+      chunk is already present, does nothing. *)
 
   method flush : unit
-  method close : unit
 end

@@ -1,3 +1,3 @@
 (* Backup restoration. *)
 
-val run_restore : #Pool.writable -> Hash.t -> string -> unit
+val run_restore : #Pool.readable -> Hash.t -> string -> unit

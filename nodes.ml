@@ -130,7 +130,7 @@ object
     IO.close_out out
 end
 
-let walk (pool : #Pool.writable) path hash (visitor : visitor) =
+let walk (pool : #Pool.readable) path hash (visitor : visitor) =
   let full_data = visitor#want_full_data in
   let meter = new node_meter in
   let rec descend path hash =
