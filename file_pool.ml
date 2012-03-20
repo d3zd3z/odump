@@ -76,6 +76,21 @@ type node = {
   n_index: File_index.t;
   n_path: string }
 
+(* Attempt to regenerate the index for this pool file. *)
+let recover_index name file index =
+  Log.warn (fun () -> "Index recovery", ["file", name]);
+  index#clear;
+  let limit = file#size in
+  let rec loop pos =
+    if pos < limit then begin
+      let info = file#read_info pos in
+      index#add info.Chunk.in_hash pos info.Chunk.in_kind;
+      loop (pos + info.Chunk.in_write_size)
+    end in
+  loop 0;
+  index#save limit;
+  index#load limit
+
 let find_backup_nodes path =
   let redata name =
     if Str.string_match data_re name 0 then
@@ -87,8 +102,11 @@ let find_backup_nodes path =
   let lookup num =
     let fname = make_pool_name path num in
     let file = Chunk.open_chunk_file fname in
-    let index = File_index.make **> to_index_name fname in
-    index#load file#size; (* TODO: handle exception *)
+    let index = File_index.make (to_index_name fname) in
+    begin try index#load file#size with
+      | Sys_error _
+      | File_index.Index_read_error _ -> recover_index fname file index
+    end;
     { n_file = file; n_index = index; n_path = fname } in
   List.map lookup nums
 

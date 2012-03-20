@@ -1,5 +1,7 @@
 (* File index. *)
 
+exception Index_read_error of string
+
 class type file_index =
 object
   method add: Hash.t -> int -> string -> unit

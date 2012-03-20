@@ -25,12 +25,12 @@
    - [X] general logger
    - [X] progress meter (can be improved)
    - [X] clone command
-   - [ ] index recovery
+   - [X] index recovery
    - [ ] 64-bit uid/gid (not sure this is ever necessary)
    - [ ] pool locking
    - [ ] pool hash verification
    - [ ] don't cross device boundaries
-   - [ ] progress meter on backup
+   - [X] progress meter on backup
    - [ ] manual prune of expired cache entries
    - [ ] flush pool and index files on write
 
@@ -56,6 +56,13 @@
    - [ ] Disable progress meter on unit tests
    - [ ] Nicer timestamps in log messages
    - [ ] Proper command line processing
+   - [ ] Custom progress meter for clone as well  The whole meter
+     needs to be cleaned up a bit, perhaps made into a functor/module
+     instead of done with classes.
+
+** Big things
+
+*** Network backup
 
 ** Problem with jpool
 

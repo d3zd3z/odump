@@ -68,9 +68,39 @@ let creation tmpdir =
   monitor#openit;
   monitor#check;
   monitor#check_index;
-  let _ = Sys.command ("ls -l " ^ tmpdir) in
+  (* let _ = Sys.command ("ls -l " ^ tmpdir) in *)
+  ()
+
+let index_recovery tmpdir =
+  let index_name = Filename.concat tmpdir "pool-data-0000.idx" in
+  let tmp_name = index_name ^ ".old" in
+  let monitor = pool_monitor tmpdir in
+  monitor#create;
+
+  (* Check completely missing index. *)
+  monitor#openit;
+  monitor#add (1 -- 2000);
+  monitor#close;
+  Sys.remove index_name;
+
+  monitor#openit;
+  monitor#check;
+  monitor#close;
+
+  (* Check index of smaller file. *)
+  copy_file index_name tmp_name;
+  monitor#openit;
+  monitor#add (2001 -- 4000);
+  monitor#close;
+
+  (* Sys.remove index_name; *)
+  copy_file tmp_name index_name;
+  monitor#openit;
+  monitor#check;
+  monitor#close;
   ()
 
 let suite = "file_pool" >::: [
   "creation" >:: with_temp_dir creation;
+  "recovery" >:: with_temp_dir index_recovery;
 ]

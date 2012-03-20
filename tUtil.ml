@@ -56,6 +56,15 @@ let with_temp_pool op =
       (File_pool.open_file_pool dir) in
  with_temp_dir op2
 
+(* For now, assume there are no spaces in the names. *)
+let copy_file src dest =
+  let command = Printf.sprintf "cp %s %s" src dest in
+  match Sys.command command with
+    | 0 -> ()
+    | n -> Log.failure ("Unable to copy file", ["exit", string_of_int n;
+						"src", src;
+						"dest", dest])
+
 (* This is biased a bit, but it doesn't really matter. *)
 let random_next st limit =
   let st' = Int32.add (Int32.mul st 1103515245l) 12345l in

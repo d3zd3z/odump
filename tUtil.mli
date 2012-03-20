@@ -24,3 +24,6 @@ val make_random_chunk: ?kind:string -> int -> int -> Chunk.t
     "blob". *)
 
 val do_cleanup: bool ref
+
+val copy_file: string -> string -> unit
+(** [copy_file src dest] Copy the contents of the file src into dest. *)
