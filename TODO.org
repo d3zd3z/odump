@@ -71,8 +71,8 @@
      backups.  Need to solve the notion of canonical names for backups
      so we can definitively refer to older backups.
 
-   - [ ] Distinguish short help text from long help.
-   - [ ] Don't use the Batteries handler, but use the exposed argument
+   - [X] Distinguish short help text from long help.
+   - [X] Don't use the Batteries handler, but use the exposed argument
      spec type.
 
 ** Big things

@@ -192,7 +192,8 @@ let dump pool_path backup_path atts =
 (** {4 Argument processing} *)
 
 type command = {
-  usage: string;
+  help: string; (** Short description *)
+  usage: string; (** Usage text. *)
   args: (Arg.key * Arg.spec * Arg.doc) list;
   action: (unit -> unit) -> string list -> unit }
 
@@ -237,28 +238,36 @@ let command_walk usage = function
   | _ -> usage ()
 
 let commands = Map.StringMap.of_enum (List.enum [
-  "list", { usage = "List backups available in a pool";
+  "list", { help = "List backups available in a pool";
+	    usage = "odump list -pool <path>";
 	    args = [ pool_arg ];
 	    action = command_list };
-  "make-cache", { usage = "Update a visited file cache";
+  "make-cache", { help = "Update a visited file cache";
+		  usage = "odump make-cache -pool <path> <hash> <path>";
 		  args = [ pool_arg ];
 		  action = command_make_cache };
-  "du", { usage = "Show space used";
+  "du", { help = "Show space used";
+	  usage = "odump du -pool <path> <hash>";
 	  args = [ pool_arg ];
 	  action = command_du };
-  "restore", { usage = "restore -pool <path> <hash> <destdir>";
+  "restore", { help = "Restore a backup";
+	       usage = "restore -pool <path> <hash> <destdir>";
 	       args = [ pool_arg ];
 	       action = command_restore };
-  "dump", { usage = "dump -pool <path> <root> key=value ...";
+  "dump", { help = "Make a backup of a directory";
+	    usage = "dump -pool <path> <root> key=value ...";
 	    args = [ pool_arg ];
 	    action = command_dump };
-  "create-pool", { usage = "create-pool -pool <path>";
+  "create-pool", { help = "Create a new storage pool in an empty directory";
+		   usage = "create-pool -pool <path>";
 		   args = [ pool_arg ];
 		   action = command_create_pool };
-  "clone", { usage = "clone -pool <path> <dest-pool-path> <hashes>";
+  "clone", { help = "Clone a backup to a new pool";
+	     usage = "clone -pool <path> <dest-pool-path> <hashes>";
 	     args = [ pool_arg ];
 	     action = command_clone };
-  "walk", { usage = "walk -pool <path> <hash>";
+  "walk", { help = "Show the contents of a backup";
+	    usage = "walk -pool <path> <hash>";
 	    args = [ pool_arg ];
 	    action = command_walk };
 ])
@@ -269,7 +278,7 @@ let usage () =
   let names = Map.StringMap.enum commands in
   Format.fprintf fmt "usage: odump <command> [<args>]@\n@\n";
   Format.fprintf fmt "commands: @[";
-  Enum.iter (fun (name, {usage}) -> Format.fprintf fmt "%-12s %s@\n" name usage) names;
+  Enum.iter (fun (name, {help}) -> Format.fprintf fmt "%-12s %s@\n" name help) names;
   Format.fprintf fmt "@]@\n";
   Format.fprintf fmt "Use 'odump command --help' for more information on a specific command.@\n@\n";
   Format.fprintf fmt "Global options:";
@@ -297,6 +306,7 @@ let main () =
       let add_arg arg = args := arg :: !args in
       Arg.parse command.args add_arg command.usage;
       let show_use = fun () ->
+	eprintf "%s\n\nusage: " command.help;
 	Arg.usage command.args command.usage;
 	exit 1 in
       command.action show_use (List.rev !args)
