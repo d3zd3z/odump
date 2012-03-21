@@ -91,6 +91,8 @@ class du_visitor pool =
 object (self)
   inherit Nodes.empty_visitor
 
+  method! want_full_data = false
+
   val mutable sizes = StringMap.empty
 
   val seen = BitSet.empty () (* TODO: Get size. *)
