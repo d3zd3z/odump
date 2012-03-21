@@ -42,6 +42,7 @@
    - [ ] Store canonical path in backup to make cache regeneration easier
    - [ ] Exclusion lists
    - [ ] read-only open of pool, with read locking
+   - [X] config file, to set default pool
 
 ** Misc things (cleanups etc)
 
@@ -74,6 +75,11 @@
    - [X] Distinguish short help text from long help.
    - [X] Don't use the Batteries handler, but use the exposed argument
      spec type.
+
+   - [ ] Compute a version string and encoding it into the
+     executable.  I'm thinking of finding the most recent tag, and
+     then using a timestamp of the HEAD commit if the tree is dirty
+     (rather than just a hash).
 
 ** Big things
 
