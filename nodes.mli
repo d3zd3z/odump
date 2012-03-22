@@ -44,4 +44,5 @@ class virtual empty_visitor : visitor
     visitor has [#want_full_data] as [true], then enter/leave will be
     called for each data chunk, otherwise the info about the data
     chunks will be passed to [#data_summary]. *)
-val walk : #Pool.readable -> string -> Hash.t -> visitor -> unit
+val walk : ?aux_meter:(unit -> string) ->
+  #Pool.readable -> string -> Hash.t -> visitor -> unit

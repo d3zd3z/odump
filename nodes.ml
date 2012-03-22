@@ -91,7 +91,7 @@ object
   method leave _ _ _ = ()
 end
 
-class node_meter =
+class node_meter aux_meter =
 object
   val start_time = Unix.gettimeofday ()
   val mutable count = 0L
@@ -111,11 +111,15 @@ object
 
   method register =
     let show fmt =
+      let aux = aux_meter () in
       let age = Unix.gettimeofday () -. start_time in
+      Format.fprintf fmt "----------------------------------------@\n";
       Format.fprintf fmt "%9Ld nodes, %9Ld dirs, %9Ld nondirs@\n" count dirs nondirs;
       Log.format_size_rate fmt " %s uncompressed (%s/sec)@\n" uncompressed age;
       Log.format_size_rate fmt " %s compressed   (%s/sec)" compressed age;
-      Log.format_ratio fmt "  %.1f%%@." uncompressed compressed in
+      Log.format_ratio fmt "  %.1f%%@." uncompressed compressed;
+      Format.fprintf fmt "%s" aux;
+      Format.fprintf fmt "----------------------------------------@\n" in
     Log.set_meter (Log.build_format_meter show)
 
   method update = Log.update_meter ()
@@ -125,9 +129,9 @@ object
     Log.set_meter Log.null_meter
 end
 
-let walk (pool : #Pool.readable) path hash (visitor : visitor) =
+let walk ?(aux_meter = Log.null_meter) (pool : #Pool.readable) path hash (visitor : visitor) =
   let full_data = visitor#want_full_data in
-  let meter = new node_meter in
+  let meter = new node_meter aux_meter in
   meter#register;
   let rec descend path hash =
     let (chunk_get, info_get, kind) = Option.get (pool#find_full hash) in

@@ -60,7 +60,7 @@
    - [ ] Disable progress meter on unit tests
    - [X] Nicer timestamps in log messages
    - [X] Proper command line processing
-   - [ ] Custom progress meter for clone as well  The whole meter
+   - [X] Custom progress meter for clone as well  The whole meter
      needs to be cleaned up a bit, perhaps made into a functor/module
      instead of done with classes.
    - [ ] Improve UI for cache creation.  Allow the user to specify the
