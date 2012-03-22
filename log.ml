@@ -66,7 +66,8 @@ let message text = with_output (fun () -> print_string text; print_newline ())
 let event_to_string log level (desc, parms) time =
   let out = IO.output_string () in
   let fmt = Format.formatter_of_output out in
-  Format.fprintf fmt "%12.3f: @[%s@," time desc;
+  let nice_time = Netdate.format "%Y%m%d-%H%M%.3S" (Netdate.create ~localzone:true time) in
+  Format.fprintf fmt "%s: @[%s@," nice_time desc;
   let each (key, value) = Format.fprintf fmt "@ %s:%s" key value in
   List.iter each parms;
   Format.fprintf fmt "@.";
