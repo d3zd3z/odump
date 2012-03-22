@@ -72,3 +72,7 @@ val compress: string -> string option
     return [Some buf] if the data could be compressed.  If the
     compressed result wouldn't be smaller than the source, returns
     [None]. *)
+
+val verify_hashes : bool ref
+(** Set to try to cause chunk reading to compute the hashes of the
+    read data to verify them. *)

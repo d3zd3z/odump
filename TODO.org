@@ -51,10 +51,12 @@
    - [ ] Allow #enter on traveral to abort the traversal (maybe there
      isn't anything to do here, since raising an exception might just
      work).
-   - [ ] Better control over when hashes are verified.  Normally, we
+   - [X] Better control over when hashes are verified.  Normally, we
      probably only want to verify them when explicitly asked to, or
      perhaps when restoring.
    - [ ] Progress meter on multiple-clones doesn't cleanup properly.
+     (This appears to be explicit in the code, the flush is to make
+     the progress meter stick).
    - [ ] Disable progress meter on unit tests
    - [X] Nicer timestamps in log messages
    - [X] Proper command line processing

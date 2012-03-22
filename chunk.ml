@@ -185,6 +185,8 @@ let get_header chan =
   let hash = String.sub buf 28 20 in
   { h_clen = clen; h_len = len; h_kind = kind; h_hash = Hash.of_raw hash }
 
+let verify_hashes = ref false
+
 let read_info chan =
   let header = get_header chan in
   let padding = 15 land (-header.h_clen) in
@@ -202,9 +204,11 @@ let read chan =
     new compressed_chunk header.h_kind (Some header.h_hash) data header.h_len in
   (* Verify needs to check the hash manually, since we're always
      storing the read one in the chunk. *)
-  if false then begin
-    (* Verify the hash. *)
-    if header.h_hash <> chunk#hash then Log.failure ("Incorrect SHA1 reading chunk", [])
+  if !verify_hashes then begin
+    let computed_hash = Hash.of_data [chunk#kind; chunk#data] in
+    if header.h_hash <> computed_hash then
+      Log.failure ("Incorrect SHA1 reading chunk", ["hash", Hash.to_string header.h_hash;
+						    "got", Hash.to_string computed_hash])
   end;
   chunk
 

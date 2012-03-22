@@ -196,6 +196,8 @@ type command = {
 
 let pool = ref ""
 let pool_arg = ("-pool", Arg.Set_string pool, "Path to storage pool")
+let verify_arg = ("-verify-hashes", Arg.Set Chunk.verify_hashes,
+		  "Verify hashes while reading")
 let must_pool usage =
   if !pool = "" then begin
     eprintf "Must specify a pool with -pool\n";
@@ -301,7 +303,7 @@ let main () =
   (* Scan the arguments, stopping at the first anonymous argument.
      This parses the arguments up until the command name. *)
   let global_usage = usage () in
-  let global_args = [ pool_arg ] in
+  let global_args = [ pool_arg; verify_arg ] in
   begin try Arg.parse global_args (fun arg -> raise Got_command) global_usage;
 	    Arg.usage global_args global_usage;
 	    exit 1
