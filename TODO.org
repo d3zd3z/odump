@@ -56,7 +56,7 @@
      perhaps when restoring.
    - [ ] Progress meter on multiple-clones doesn't cleanup properly.
    - [ ] Disable progress meter on unit tests
-   - [ ] Nicer timestamps in log messages
+   - [X] Nicer timestamps in log messages
    - [X] Proper command line processing
    - [ ] Custom progress meter for clone as well  The whole meter
      needs to be cleaned up a bit, perhaps made into a functor/module
@@ -80,6 +80,8 @@
      executable.  I'm thinking of finding the most recent tag, and
      then using a timestamp of the HEAD commit if the tree is dirty
      (rather than just a hash).
+
+   - [ ] Show dir and nondir counts when doing backups.
 
 ** Big things
 

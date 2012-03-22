@@ -6,15 +6,17 @@ Introduction goes here
 
   The dependencies can be found in the following debian packages.
 
-  - ocaml-findlib
   - libbatteries-ocaml-dev
+  - libconfig-file-ocaml-dev
   - libcryptokit-ocaml-dev
+  - libfindlib-ocaml-dev
+  - libocamlnet-ocaml-dev
   - libounit-ocaml-dev
   - libpxp-ocaml-dev
+  - libsqlite3-ocaml-dev
   - libuuidm-ocaml-dev
   - libzip-ocaml-dev
-  - libfindlib-ocaml-dev
-  - libsqlite3-ocaml-dev
+  - ocaml-findlib
 
   This can be installed easily with something like:
 

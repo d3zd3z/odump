@@ -8,13 +8,8 @@ module StringMap = Map.StringMap
 let dump_fmt = "%Y-%m-%d_%H:%M"
 
 let format_date date =
-  let tm = Unix.localtime date in
-  sprintf "%04d-%02d-%02d %02d:%02d"
-    (tm.Unix.tm_year + 1900)
-    tm.Unix.tm_mon
-    tm.Unix.tm_mday
-    tm.Unix.tm_hour
-    tm.Unix.tm_min
+  let nd = Netdate.create ~localzone:true date in
+  Netdate.format dump_fmt nd
 
 let show_backup_node hash node = match node with
   | Nodes.BackupNode (date, props) ->
