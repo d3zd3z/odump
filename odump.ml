@@ -287,7 +287,10 @@ exception Got_command
 
 let main () =
   Config.load_config "/etc/odump.conf";
-  pool := Config.pool#get;
+  begin match Config.pool#get with
+    | None -> ()
+    | Some p -> pool := p
+  end;
   (* Scan the arguments, stopping at the first anonymous argument.
      This parses the arguments up until the command name. *)
   let global_usage = usage () in

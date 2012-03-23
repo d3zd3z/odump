@@ -1,7 +1,8 @@
 (* The odump config file. *)
 
 let group = new Config_file.group
-let pool = new Config_file.filename_cp ~group:group ["defaults";"pool"] "" "Default pool"
+let pool = new Config_file.option_cp Config_file.string_wrappers
+  ~group:group ["defaults";"pool"] None "Default pool"
 
 (* Try loading the given config file.  Note that the Config_file
    parser will try to create the file, with all of the defaults, if it
