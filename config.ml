@@ -22,6 +22,7 @@ let must section name = function
 let string_list_wrappers = C.list_wrappers C.string_wrappers
 let command_wrappers = C.tuple2_wrappers C.string_wrappers string_list_wrappers
 let client_wrappers =
+  let must name field = must "client" name field in
   let to_raw = fun client ->
     C.Raw.Section [ "name", C.string_wrappers.C.to_raw client.client_name;
 		    "command", command_wrappers.C.to_raw client.client_command;
@@ -39,9 +40,9 @@ let client_wrappers =
 	    exit 1)
 	l;
       {
-	client_name = must "client" "name" !name;
-	client_command = must "client" "command" !command;
-	client_db_dir = must "client" "db_dir" !db_dir }
+	client_name = must "name" !name;
+	client_command = must "command" !command;
+	client_db_dir = must "db_dir" !db_dir }
     | r -> raise (C.Wrong_type (fun outchan -> Printf.fprintf outchan
       "Raw.Section expected, got %a\n%!" C.Raw.to_channel r))
  in
