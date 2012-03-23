@@ -211,6 +211,9 @@ let must_pool usage =
       exit 1
     | Some p -> p
 
+let client = ref None
+let client_arg = ("-client", Arg.String (set_option client), "Remote client to use")
+
 let command_list usage = function
   | [] -> list (must_pool usage)
   | _ -> usage ()
@@ -242,6 +245,46 @@ let command_clone usage = function
 let command_walk usage = function
   | [node] -> walk (must_pool usage) node
   | _ -> usage ()
+
+let command_remote_ping usage = function
+  | [] -> Remote_host.ping ()
+  | _ -> usage ()
+
+let command_receiver usage = function
+  | [] -> Remote_receiver.process ()
+  | _ -> usage ()
+
+let remote_commands = Map.StringMap.of_enum (List.enum [
+  "ping", { help = "Test a remote connection";
+	    usage = "odump remote -client name ping";
+	    args = [ client_arg ];
+	    action = command_remote_ping }
+])
+
+let command_remote usage = function
+  | [] -> Log.failure ("Must specify remote command", [])
+  | (command :: _) as command_line ->
+    Remote_host.client := begin match !client with
+      | None -> Log.warn (fun () -> "Must specify -client <name>", []); usage (); exit 1
+      | Some c ->
+	(try List.find (fun n -> n.Config.client_name = c) Config.clients#get
+	 with Not_found -> Log.failure ("Unknown client", ["name", c]))
+    end;
+    match Map.StringMap.Exceptionless.find command remote_commands with
+      | None ->
+	eprintf "Unknown remote command: '%s'\n" command;
+	exit 1
+      | Some command ->
+	let command_line = Array.of_list command_line in
+	let args = ref [] in
+	let current = ref 0 in
+	let add_arg arg = args := arg :: !args in
+	Arg.parse_argv ~current:current command_line command.args add_arg command.usage;
+	let show_use = fun () ->
+	  eprintf "%s\n\nusage: " command.help;
+	  Arg.usage command.args command.usage;
+	  exit 1 in
+	command.action show_use (List.rev !args)
 
 let commands = Map.StringMap.of_enum (List.enum [
   "list", { help = "List backups available in a pool";
@@ -276,6 +319,14 @@ let commands = Map.StringMap.of_enum (List.enum [
 	    usage = "walk -pool <path> <hash>";
 	    args = [ pool_arg ];
 	    action = command_walk };
+  "remote", { help = "Run a remote command";
+	      usage = "remote -client <name> command...";
+	      args = [ client_arg ];
+	      action = command_remote };
+  "receiver", { help = "Remote receiver (don't use directly)";
+		usage = "intentionally undocumented";
+		args = [];
+		action = command_receiver };
 ])
 
 let usage () =

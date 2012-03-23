@@ -2,6 +2,8 @@
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(sqlite3)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(config-file)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(netstring)
+<*.ml> or <*.mli> or <*.native> or <*.byte>: package(shell)
+<*.ml> or <*.mli> or <*.native> or <*.byte>: thread
 
 # Enable this to get camlp4of.
 # TODO: Figure out how to pull in other extensions.

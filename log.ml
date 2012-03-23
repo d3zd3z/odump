@@ -60,7 +60,7 @@ let with_output f =
   if prior_count > 0 then
     show_progress !last_progress
 
-let message text = with_output (fun () -> print_string text; print_newline ())
+let message text = with_output (fun () -> output_string stderr text; output_char stderr '\n')
 
 (* 'Format' based formatter. *)
 let event_to_string log level (desc, parms) time =
