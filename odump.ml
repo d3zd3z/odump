@@ -194,46 +194,53 @@ type command = {
   args: (Arg.key * Arg.spec * Arg.doc) list;
   action: (unit -> unit) -> string list -> unit }
 
-let pool = ref ""
-let pool_arg = ("-pool", Arg.Set_string pool, "Path to storage pool")
+let set_option opt value = opt := Some value
+
+let config_file = ref "/etc/odump.conf"
+let config_file_arg = ("-config", Arg.Set_string config_file,
+		       "Config file, default: " ^ !config_file)
+let pool = ref None
+let pool_arg = ("-pool", Arg.String (set_option pool), "Path to storage pool")
 let verify_arg = ("-verify-hashes", Arg.Set Chunk.verify_hashes,
 		  "Verify hashes while reading")
 let must_pool usage =
-  if !pool = "" then begin
-    eprintf "Must specify a pool with -pool\n";
-    usage ()
-  end
+  match !pool with
+    | None ->
+      eprintf "Must specify a pool with -pool\n";
+      usage ();
+      exit 1
+    | Some p -> p
 
 let command_list usage = function
-  | [] -> must_pool usage; list !pool
+  | [] -> list (must_pool usage)
   | _ -> usage ()
 
 let command_make_cache usage = function
-  | [node; backup_dir] -> must_pool usage; make_cache !pool node backup_dir
+  | [node; backup_dir] -> make_cache (must_pool usage) node backup_dir
   | _ -> usage ()
 
 let command_du usage = function
-  | [node] -> must_pool usage; du !pool node
+  | [node] -> du (must_pool usage) node
   | _ -> usage ()
 
 let command_restore usage = function
-  | [node; dest] -> must_pool usage; restore !pool node dest
+  | [node; dest] -> restore (must_pool usage) node dest
   | _ -> usage ()
 
 let command_dump usage = function
-  | (root :: att1 :: atts) -> must_pool usage; dump !pool root (att1::atts)
+  | (root :: att1 :: atts) -> dump (must_pool usage) root (att1::atts)
   | _ -> usage ()
 
 let command_create_pool usage = function
-  | [] -> must_pool usage; create_pool !pool
+  | [] -> create_pool (must_pool usage)
   | _ -> usage ()
 
 let command_clone usage = function
-  | (dest_path :: hash1 :: hashes) -> must_pool usage; pool_clone !pool dest_path (hash1 :: hashes)
+  | (dest_path :: hash1 :: hashes) -> pool_clone (must_pool usage) dest_path (hash1 :: hashes)
   | _ -> usage ()
 
 let command_walk usage = function
-  | [node] -> must_pool usage; walk !pool node
+  | [node] -> walk (must_pool usage) node
   | _ -> usage ()
 
 let commands = Map.StringMap.of_enum (List.enum [
@@ -286,20 +293,21 @@ let usage () =
 exception Got_command
 
 let main () =
-  Config.load_config "/etc/odump.conf";
-  begin match Config.pool#get with
-    | None -> ()
-    | Some p -> pool := p
-  end;
   (* Scan the arguments, stopping at the first anonymous argument.
      This parses the arguments up until the command name. *)
   let global_usage = usage () in
-  let global_args = [ pool_arg; verify_arg ] in
+  let global_args = [ pool_arg; verify_arg; config_file_arg ] in
   begin try Arg.parse global_args (fun arg -> raise Got_command) global_usage;
 	    Arg.usage global_args global_usage;
 	    exit 1
     with Got_command -> ()
   end;
+  Config.load_config !config_file;
+
+  (* If the pool was not specified on the command line, use a possible
+     value from the config file. *)
+  if !pool = None then pool := Config.pool#get;
+
   match Map.StringMap.Exceptionless.find Sys.argv.(!Arg.current) commands with
     | None ->
       eprintf "Unknown command: '%s'\n" Sys.argv.(!Arg.current);

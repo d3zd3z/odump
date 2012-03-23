@@ -92,7 +92,7 @@
 **** Enhanced config
      - [X] Move config to separate file
      - [X] Change pool to an option (ask on Stackoverflow)
-     - [ ] Allow an alternate config file for testing
+     - [X] Allow an alternate config file for testing
      - [ ] Add a config record to define clients, name, command, etc.
 **** Accessing remote client
      - [ ] Spawn shell and send simple command to client
