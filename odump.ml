@@ -283,23 +283,11 @@ let usage () =
   Format.fprintf fmt "Global options:";
   IO.close_out out
 
-(* The Config file *)
-let config_group = new Config_file.group
-let config_pool = new Config_file.string_cp ~group:config_group ["defaults";"pool"] "" "Default pool"
-
-(* Try processing the config options in the file.  Note that the
-   Config_parser will try to create the file, with all of the defaults,
-   if it doesn't exist.  To allow this to be run as non-root, we catch,
-   and ignore the Sys_error. *)
-let try_config_file path =
-  (try config_group#read path with
-    | Sys_error (msg) -> Log.warn (fun () -> "Unable to write default config file", ["message", msg]));
-  pool := config_pool#get
-
 exception Got_command
 
 let main () =
-  try_config_file "/etc/odump.conf";
+  Config.load_config "/etc/odump.conf";
+  pool := Config.pool#get;
   (* Scan the arguments, stopping at the first anonymous argument.
      This parses the arguments up until the command name. *)
   let global_usage = usage () in

@@ -43,6 +43,7 @@
    - [ ] Exclusion lists
    - [ ] read-only open of pool, with read locking
    - [X] config file, to set default pool
+   - [ ] Show latest path in tree traversals
 
 ** Misc things (cleanups etc)
 
@@ -88,6 +89,12 @@
 ** Big things
 
 *** Network backup
+**** Enhanced config
+     - [X] Move config to separate file
+     - [ ] Change pool to an option
+     - [ ] Add a config record to define clients, name, command, etc.
+**** Accessing remote client
+     - [ ] Spawn shell and send simple command to client
 
 ** Problem with jpool
 
