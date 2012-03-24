@@ -54,6 +54,7 @@ object (self)
   method get_backups = inner#get_backups
   method flush = inner#flush
   method close = inner#close
+  method uuid = inner#uuid
 end
 
 let block_size = 256 * 1024

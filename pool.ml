@@ -29,6 +29,9 @@ object
       kind of "back". *)
 
   method close : unit
+
+  method uuid : string
+  (** Get the unique string that identifies this backup pool. *)
 end
 
 (** A [writable] pool can also have chunks written to it. *)

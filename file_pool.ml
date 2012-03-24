@@ -150,6 +150,7 @@ object
 
   method flush : unit
   method close : unit
+  method uuid : string
 end
 
 type t = file_pool
@@ -260,6 +261,8 @@ object (self)
       with_dispose ~dispose:close_in get (open_in backups_name)
     with
 	Sys_error _ -> []
+
+  method uuid = Uuidm.to_string props.p_uuid
 end
 
 let with_file_pool path f =
