@@ -86,9 +86,22 @@
 
    - [ ] Show dir and nondir counts when doing backups.
 
+   - [ ] Allow named groups of backup pools, instead of just a single
+     default path.
+
+   - [X] Fix 'dup' vs 'skip' when dumping.  Some things seem to be
+     counted incorrectly.
+
 ** Big things
 
 *** Network backup
+
+    An easier way to allow remote backups is to specify a way of
+    having the index files, and the seen database in a different
+    directory than the pool data files.  This would allow the backup
+    data itself to be on something, such as sshfs, whereas the cache
+    data would be local.
+
 **** Enhanced config
      - [X] Move config to separate file
      - [X] Change pool to an option (ask on Stackoverflow)
@@ -96,6 +109,16 @@
      - [X] Add a config record to define clients, name, command, etc.
 **** Accessing remote client
      - [X] Spawn shell and send simple command to client
+
+**** Refactoring needed
+     - [ ] Generalize logging.  The logging and message mechanism
+       shouldn't just print stuff to stderr, but be able to be hooked
+       into to send these as messages.
+
+     - [ ] Progress meter extraction?  Or just print the meters over
+       the channel.  In any case, the meter needs to be driver over
+       the channel so it is correctly coordinated with the other
+       output.
 
 ** Problem with jpool
 

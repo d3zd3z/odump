@@ -34,7 +34,7 @@ object (self)
   method add chunk =
     count <- Int64.succ count;
     if inner#mem chunk#hash then
-      skip <- Int64.add skip (Int64.of_int chunk#data_length)
+      dup <- Int64.add dup (Int64.of_int chunk#data_length)
     else begin
       compressed <- Int64.add compressed (Int64.of_int chunk#write_size);
       uncompressed <- Int64.add uncompressed (Int64.of_int chunk#data_length);
