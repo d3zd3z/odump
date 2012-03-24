@@ -10,10 +10,27 @@ let default_limit = 640 * 1024 * 1024
 let limit_lower_bound = 1 lsl 20
 let limit_upper_bound = 1 lsl 30 - 1 (* To avoid using LargeFile IO *)
 
-(* TODO: The uuidm library seems to only use the time as it's basis
-   for randomness.  It would be better to base this on /dev/urandom, mask
-   appropriately for type 4 uuid, and just make it ourselves. *)
-let get_uuid () = Uuidm.to_string (Uuidm.create `V4)
+(* The Uuidm module uses [Random.make_self_init], which as of Ocaml
+   3.12, only uses the time of day (admittedly with some precision), and
+   the process id.  For small use cases, this isn't a problem, but for
+   something supposedly universal, it's quite terrible.
+
+   To improve this, we'll use random entropy we get from /dev/urandom,
+   and generate a name-based UUID using the URL of
+   "http://random.davidb.org/" followed by the 16 bytes of random data
+   in hex.
+*)
+let get_uuid () =
+  let buf = Buffer.create 57 in
+  Buffer.add_string buf "http://random.davidb.org/";
+  let random = String.create 16 in
+  Std.with_dispose ~dispose:Legacy.close_in
+    (fun chan -> Legacy.really_input chan random 0 (String.length random))
+    (Legacy.open_in_bin "/dev/urandom");
+  for i = 0 to String.length random - 1 do
+    Buffer.add_string buf (Printf.sprintf "%02x" (Char.code random.[i]))
+  done;
+  Uuidm.to_string (Uuidm.create (`V5 (Uuidm.ns_url, Buffer.contents buf)))
 
 let create_file_pool ?(limit=default_limit) ?(newfile=false) path =
   if limit < limit_lower_bound || limit > limit_upper_bound then
