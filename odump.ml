@@ -140,34 +140,8 @@ let restore path node dest =
   File_pool.with_file_pool path (fun pool ->
     Restore.run_restore pool node dest)
 
-let mkdir_safely path =
-  try Unix.mkdir path 0o755
-  with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
-
-(* Convert a pathname (with slashes) into a name that can be used as a
-   filename.  Slashes are converted to hyphens, and hyphens are converted
-   to doubled hyphens. *)
-let flatten_path path prefix suffix =
-  let buf = Buffer.create (String.length prefix + String.length path + 10) in
-  Buffer.add_string buf prefix;
-  let each = function
-    | '/' -> Buffer.add_char buf '-'
-    | '-' -> Buffer.add_string buf "--"
-    | ch -> Buffer.add_char buf ch in
-  String.iter each path;
-  Buffer.add_string buf suffix;
-  Buffer.contents buf
-
-(* Convert a path of a directory to backup into a cached path.  Also
-   builds the directory if necessary. *)
-let cache_path pool_dir backup_path =
-  let canonical = Dbunix.mountpoint_of backup_path in
-  let seen_dir = Filename.concat pool_dir "seen" in
-  mkdir_safely seen_dir;
-  flatten_path canonical (Filename.concat seen_dir "cache") ".sqlite"
-
 let make_cache path hash backup_dir =
-  let cache_name = cache_path path backup_dir in
+  let cache_name = Misc.cache_path path backup_dir in
   let hash = Hash.of_string hash in
   File_pool.with_file_pool path (fun pool ->
     Seendb.make_cache pool cache_name hash)
@@ -183,7 +157,7 @@ let pool_clone src_path dest_path hashes =
 
 let dump pool_path backup_path atts =
   File_pool.with_file_pool pool_path (fun pool ->
-    let cache = cache_path pool_path backup_path in
+    let cache = Misc.cache_path pool_path backup_path in
     Backup.save pool cache backup_path atts)
 
 (** {4 Argument processing} *)
