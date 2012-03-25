@@ -22,8 +22,7 @@ let process () =
   let host_version = (Unsafe.receive () : int) in
   if host_version <> version then begin
     Unsafe.send (-version);
-    Log.failure ("Protocol mismatch with remote", ["receiver", string_of_int version;
-						   "host", string_of_int host_version])
+    Log.failf "Protocol mismatch with remote: receiver=%d, host=%d" version host_version
   end;
   Unsafe.send version;
   match client_receive () with

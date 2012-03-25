@@ -2,17 +2,24 @@
 
 open Batteries_uni
 
-include Logger
+let log = Netlog.log
+let logf = Netlog.logf
 
-let odump = Logger.make_log "odump"
+let log_level = ref `Info
 
-let failure event =
-  log odump FATAL (fun () -> event);
+let fail message =
+  log `Crit message;
   exit 1
 
-let warn event_fun = log odump WARN event_fun
-let info event_fun = log odump INFO event_fun
-let debug event_fun = log odump DEBUG event_fun
+let failf fmt =
+  Printf.ksprintf fail fmt
+
+let info msg = log `Info msg
+let infof fmt = Printf.ksprintf info fmt
+let warn msg = log `Warning msg
+let warnf fmt = Printf.ksprintf warn fmt
+let debug msg = log `Debug msg
+let debugf fmt = Printf.ksprintf debug fmt
 
 let has_console = Unix.isatty Unix.stderr
 
@@ -62,24 +69,16 @@ let with_output f =
 
 let message text = with_output (fun () -> output_string stderr text; output_char stderr '\n')
 
-(* 'Format' based formatter. *)
-let event_to_string log level (desc, parms) time =
-  let out = IO.output_string () in
-  let fmt = Format.formatter_of_output out in
-  let nice_time = Netdate.format "%Y%m%d-%H%M%.3S" (Netdate.create ~localzone:true time) in
-  Format.fprintf fmt "%s: @[%s@," nice_time desc;
-  let each (key, value) = Format.fprintf fmt "@ %s:%s" key value in
-  List.iter each parms;
-  Format.fprintf fmt "@.";
-  IO.close_out out
-
-let mingled_formatter log level event time =
-  let text = event_to_string log level event time in
-  with_output (fun () -> output_string stderr text)
+let mingled_logger level message =
+  if Netlog.level_weight level <= Netlog.level_weight !log_level then
+    with_output (fun () ->
+      let now = Unix.gettimeofday () in
+      let nice_time = Netdate.format "%Y-%m-%d-%H:%M:%.3S" (Netdate.create ~localzone:true now) in
+      Printf.fprintf stderr "%s [%-5s]\n    %s\n%!" nice_time (Netlog.string_of_level level) message)
 
 (* Register a formater that intermingles correctly with the progress
    meter. *)
-let _ = init ["odump", INFO] mingled_formatter
+let () = Netlog.current_logger := mingled_logger
 
 let last_update = ref (Unix.gettimeofday ())
 

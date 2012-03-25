@@ -2,18 +2,20 @@
 
 open Batteries_uni
 
-(* The logger to use within the program. *)
-val odump : Logger.log
-type event = Logger.event
-type log = Logger.log
-type level = Logger.level
-val log : log -> level -> (unit -> event) -> unit
+val log : Netlog.level -> string -> unit
+val logf : Netlog.level -> ('a, unit, string, unit) format4 -> 'a
 
 (* Log failure, and then exit. *)
-val failure : event -> 'a
-val info : (unit -> event) -> unit
-val warn : (unit -> event) -> unit
-val debug : (unit -> event) -> unit
+val fail : string -> 'a
+val failf : ('a, unit, string, 'b) format4 -> 'a
+
+(* Wrappers for the various levels. *)
+val info : string -> unit
+val infof : ('a, unit, string, unit) format4 -> 'a
+val warn : string -> unit
+val warnf : ('a, unit, string, unit) format4 -> 'a
+val debug : string -> unit
+val debugf : ('a, unit, string, unit) format4 -> 'a
 
 val message : string -> unit
 val with_output : (unit -> unit) -> unit

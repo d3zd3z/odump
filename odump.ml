@@ -25,11 +25,11 @@ let show_backup_node hash node = match node with
       (Hash.to_string hash)
       (format_date date)
       (Buffer.contents buf)
-  | _ -> Log.failure ("Invalid node", [])
+  | _ -> Log.fail "Invalid node"
 
 let backup_compare a b = match (a, b) with
   | (Nodes.BackupNode (da, _), Nodes.BackupNode (db, _)) -> compare da db
-  | _ -> Log.failure ("Attempt to sort non-backup nodes", [])
+  | _ -> Log.fail "Attempt to sort non-backup nodes"
 
 let list path =
   File_pool.with_file_pool path (fun pool ->
@@ -236,13 +236,13 @@ let remote_commands = Map.StringMap.of_enum (List.enum [
 ])
 
 let command_remote usage = function
-  | [] -> Log.failure ("Must specify remote command", [])
+  | [] -> Log.fail "Must specify remote command"
   | (command :: _) as command_line ->
     Remote_host.client := begin match !client with
-      | None -> Log.warn (fun () -> "Must specify -client <name>", []); usage (); exit 1
+      | None -> Log.warn "Must specify -client <name>"; usage (); exit 1
       | Some c ->
 	(try List.find (fun n -> n.Config.client_name = c) Config.clients#get
-	 with Not_found -> Log.failure ("Unknown client", ["name", c]))
+	 with Not_found -> Log.failf "Unknown client: %S" c)
     end;
     match Map.StringMap.Exceptionless.find command remote_commands with
       | None ->
@@ -348,4 +348,4 @@ let main () =
 	exit 1 in
       command.action show_use (List.rev !args)
 
-let _ = main ()
+let () = main ()

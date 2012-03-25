@@ -34,7 +34,7 @@ let get_uuid () =
 
 let create_file_pool ?(limit=default_limit) ?(newfile=false) path =
   if limit < limit_lower_bound || limit > limit_upper_bound then
-    Log.failure ("Pool size limit out of range", []);
+    Log.fail "Pool size limit out of range";
   Misc.ensure_empty_directory ~what:"pool" path;
   let metadata = Filename.concat path "metadata" in
   let props_name = Filename.concat metadata "props.txt" in
@@ -59,7 +59,7 @@ let read_flat_properties filename =
     if String.length line > 0 && line.[0] == '#' then map
     else begin
       match String.Exceptionless.split line "=" with
-	  None -> Log.failure ("Invalid line in property file", ["line", line])
+	  None -> Log.failf "Invalid line in property file: %S" line
 	| Some (key, value) -> StringMap.add key value map
     end in
   let get inp = fold decode StringMap.empty (IO.lines_of inp) in
@@ -81,7 +81,7 @@ let to_index_name path =
   if String.ends_with path ".data" then
     String.sub path 0 (String.length path - 5) ^ ".idx"
   else
-    Log.failure ("Malformed datafile name", ["path", path])
+    Log.failf "Malformed datafile name: '%S'" path
 
 let data_re = Str.regexp "^pool-data-\\([0-9][0-9][0-9][0-9]\\)\\.data$"
 (* Note that Str doesn't appear to be reentrant. *)
@@ -95,7 +95,7 @@ type node = {
 
 (* Attempt to regenerate the index for this pool file. *)
 let recover_index name file index =
-  Log.warn (fun () -> "Index recovery", ["file", name]);
+  Log.warnf "Index recovery for %S" name;
   index#clear;
   let limit = file#size in
   let rec loop pos =
@@ -143,8 +143,7 @@ let open_lock path =
   (* Wait? *)
   begin try Unix.lockf fd Unix.F_TLOCK 0 with
     | Unix.Unix_error (e, _, _) ->
-      Log.failure ("Unable to get pool lock", ["path", path;
-					       "error", Unix.error_message e])
+      Log.failf "Unable to get pool lock in %S, %s" path (Unix.error_message e)
   end;
   fd
 

@@ -108,11 +108,8 @@ let get cache pino =
     | [ items ] ->
       let items = Array.to_list items in
       let items = String.join ", " (List.map Db.Data.to_string_debug items) in
-      Log.failure ("Unexpected response from query",
-				["pino", Int64.to_string pino;
-				 "result", ("[| " ^ items ^ " |]")])
-    | _ -> Log.failure ("Not expecting multiple rows",
-			["pino", Int64.to_string pino])
+      Log.failf "Unexpected query response: %Ld [| %S |]" pino items
+    | _ -> Log.failf "Not expecting multiple rows, for %Ld" pino
 
 let update db pino entry =
   if Int64Map.is_empty entry then

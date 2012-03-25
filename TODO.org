@@ -102,6 +102,9 @@
     data itself to be on something, such as sshfs, whereas the cache
     data would be local.
 
+    Also, investigate whether sftp has advanced sufficiently to allow
+    it to do backups.
+
 **** Enhanced config
      - [X] Move config to separate file
      - [X] Change pool to an option (ask on Stackoverflow)

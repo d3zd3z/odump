@@ -29,11 +29,11 @@ let uncompress src dest_len =
     src_offset := !src_offset + count;
     count in
   let flush buf count =
-    if !dest_offset + count > dest_len then Log.failure ("uncompress overflow", []);
+    if !dest_offset + count > dest_len then Log.fail "uncompress overflow";
     String.blit buf 0 dest !dest_offset count;
     dest_offset := !dest_offset + count in
   Zlib.uncompress ~header:true refill flush;
-  if !dest_offset <> dest_len then Log.failure ("uncompress underflow", []);
+  if !dest_offset <> dest_len then Log.fail "uncompress underflow";
   dest
 
 (* Try compressing a block of data.  Return (Some bytes) if the
@@ -178,7 +178,7 @@ type info = {
 let get_header chan =
   let buf = read_buffer chan header_size in
   let magic = String.sub buf 0 16 in
-  if magic <> pool_magic then Log.failure ("Invalid magic", []); (* TODO: Proper exception. *)
+  if magic <> pool_magic then Log.fail "Invalid magic"; (* TODO: Proper exception. *)
   let clen = get32le buf 16 in
   let len = get32le buf 20 in
   let kind = String.sub buf 24 4 in
@@ -207,8 +207,9 @@ let read chan =
   if !verify_hashes then begin
     let computed_hash = Hash.of_data [chunk#kind; chunk#data] in
     if header.h_hash <> computed_hash then
-      Log.failure ("Incorrect SHA1 reading chunk", ["hash", Hash.to_string header.h_hash;
-						    "got", Hash.to_string computed_hash])
+      Log.failf "Incorrect SHA1 reading chunk, hash=%s, got=%s"
+	(Hash.to_string header.h_hash)
+	(Hash.to_string computed_hash)
   end;
   chunk
 

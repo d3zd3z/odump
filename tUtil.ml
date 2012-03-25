@@ -61,9 +61,7 @@ let copy_file src dest =
   let command = Printf.sprintf "cp %s %s" src dest in
   match Sys.command command with
     | 0 -> ()
-    | n -> Log.failure ("Unable to copy file", ["exit", string_of_int n;
-						"src", src;
-						"dest", dest])
+    | n -> Log.failf "Unable to copy file src=%S, dest=%S, code=%d" src dest n
 
 (* This is biased a bit, but it doesn't really matter. *)
 let random_next st limit =

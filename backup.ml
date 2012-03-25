@@ -62,7 +62,7 @@ let block_size = 256 * 1024
 let decode_atts atts =
   let each att =
     try String.split att "=" with
-      | Not_found -> Log.failure ("attribute has no '='", ["attr", att]) in
+      | Not_found -> Log.failf "attribute has no '=': %S" att in
   StringMap.of_enum (Enum.map each (List.enum atts))
 
 (* Read a chunk-sized block from [fd].  Returns the data read, and
@@ -115,8 +115,7 @@ end = struct
       | Some node ->
 	let ctime = Dbunix.get_time "ctime" child_stat in
 	if node.Seendb.n_ctime = ctime then begin
-	  Log.debug (fun () -> "cache", ["ino", Int64.to_string cino;
-					 "hash", Hash.to_string node.Seendb.n_hash]);
+	  Log.debugf "cache: ino=%Ld hash=%S" cino (Hash.to_string node.Seendb.n_hash);
 	  c.add_skip (Dbunix.get_int64 "size" child_stat);
 	  let stat' = StringMap.add "hash" (Hash.to_string node.Seendb.n_hash) child_stat in
 	  (node.Seendb.n_hash, stat')
@@ -151,7 +150,7 @@ let save' pool cache backup_path atts =
   let atts = decode_atts atts in
   let root_stat = match Dbunix.lstat backup_path with
     | ("DIR", stat) -> stat
-    | (kind, _) -> Log.failure ("Root of backup is not a DIR", ["kind", kind]) in
+    | (kind, _) -> Log.failf "Root of backup is not a DIR: %S" kind in
 
   let rec walk path kind props =
     let props = match kind with
@@ -182,7 +181,7 @@ let save' pool cache backup_path atts =
 	(fun () ->
 	  let path = Filename.concat path name in
 	  walk path child_kind child_props) in
-      Log.debug (fun () -> "add", ["name", name; "hash", Hash.to_string hash]);
+      Log.debugf "add name=%S hash=%S" name (Hash.to_string hash);
       Indirect.Dir.add buf name hash) children;
     Cache.flush dircache;
     let child_hashes = Indirect.Dir.finish buf in
@@ -197,7 +196,7 @@ let save' pool cache backup_path atts =
   let hash = Nodes.try_put pool (Nodes.BackupNode (now, atts)) in
   pool#finish;
   Seendb.commit cache;
-  Log.info (fun () -> "Completed backup", ["hash", Hash.to_string hash])
+  Log.infof "Completed backup: %s" (Hash.to_string hash)
 
 let save pool cache_dir backup_path atts =
   Seendb.with_cache cache_dir (fun cache -> save' pool cache backup_path atts)

@@ -61,6 +61,6 @@ let clients = new C.list_cp client_wrappers
    ignore the Sys_error. *)
 let load_config path =
   (try group#read path with
-    | Sys_error (msg) -> Log.warn (fun () -> "Unable to write default config file", ["message", msg]))
+    | Sys_error (msg) -> Log.warnf "Unable to write default config file (%s) %S" msg path)
 
 let bogus_client = { client_name = ""; client_command = "", []; client_db_dir = "" }

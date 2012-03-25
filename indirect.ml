@@ -26,7 +26,7 @@ let push ind hash =
 let summarize ind buffer level =
   if Buffer.length buffer = 0 then begin
     if level > 0 then
-      Log.failure ("Empty has at non-zero level", []);
+      Log.fail "Empty has at non-zero level";
     (* An empty chunk is allowed, but only at level 0. *)
     let chunk = Chunk.chunk_of_string "null" "" in
     ind.pool#add chunk;

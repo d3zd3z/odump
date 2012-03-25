@@ -14,7 +14,7 @@ type t = Sqlite3.db
 
 let must result =
   if result <> Sqlite3.Rc.OK then
-    Log.failure ("sqlite error", ["code", Sqlite3.Rc.to_string result])
+    Log.failf "sqlite error: %s" (Sqlite3.Rc.to_string result)
 
 (* Perform an sql statement, installing arguments as appropriate. *)
 let sql_fold db f a0 text args =
@@ -27,8 +27,8 @@ let sql_fold db f a0 text args =
 	loop (f accum data)
       | Sqlite3.Rc.DONE -> accum
       | err ->
-	Log.failure ("sqlite error", ["query", text;
-				      "code", Sqlite3.Rc.to_string err])
+	Log.failf "sqlite error: %s, query='%S'"
+	  (Sqlite3.Rc.to_string err) text
     end in
   let result = loop a0 in
   must (Sqlite3.finalize stmt);
@@ -41,17 +41,17 @@ let sqln db text args =
 
 (* Run a query, expecting no results. *)
 let sql0 db text args =
-  sql_fold db (fun _ x -> Log.failure ("not expecing SQL rows", ["query", text])) () text args
+  sql_fold db (fun _ x -> Log.failf "not expecing SQL rows: %S" text) () text args
 
 (* Run a query, expecting a single result. *)
 let sql1 db text args =
   match sqln db text args with
     | [a] -> a
-    | rows -> Log.failure ("expecting only a single row", ["count", string_of_int (List.length rows)])
+    | rows -> Log.failf "expecting only a single row: %d" (List.length rows)
 
 (* Determine the schema version from this database. *)
 let get_schema_version db =
-  let fail () = Log.failure ("unexpected result from table query", []) in
+  let fail () = Log.fail "unexpected result from table query" in
   match sql1 db "select count(*) from sqlite_master where type = 'table' and name = 'schema_version'" [] with
     | [| Data.INT 0L |] -> None
     | [| Data.INT 1L |] ->
@@ -75,12 +75,11 @@ let connect path info =
     | None -> install_schema db info
     | Some version when version = info.schema_version -> ()
     | Some version ->
-      Log.failure ("Schema mismatch on database", ["path", path;
-						   "found", version;
-						   "expect", info.schema_version])
+      Log.failf "Schema mismatch on database at %S, found %S, expecting %S"
+	path version info.schema_version
   end;
   db
 
 let close db =
   if not (Sqlite3.db_close db) then
-    Log.failure ("Error closing database", [])
+    Log.fail "Error closing database"

@@ -41,8 +41,7 @@ let connect () =
   if reply <> version then begin
     Unix.close send_rd;
     Unix.close receive_rd;
-    Log.failure ("Protocol mismatch with remote", ["ours", string_of_int version;
-						   "theirs", string_of_int reply])
+    Log.failf "Protocol mismatch with remote, ours=%d, theirs=%d" version reply
   end;
   con
 
@@ -53,5 +52,5 @@ let ping () =
   let con = connect () in
   client_send con (`Ping "Hello world");
   match client_receive con with
-    | `Pong msg -> Log.info (fun () -> "Pong", ["message", msg])
-    | _ -> Log.failure ("Unknown reply", [])
+    | `Pong msg -> Log.infof "Ping: %S" msg
+    | _ -> Log.fail "Unknown reply"

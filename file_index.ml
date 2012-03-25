@@ -265,7 +265,7 @@ object (self)
 
   method add hash pos kind =
     if HashMap.mem hash ram then
-      Log.failure ("Attempt to add duplicate key", []);
+      Log.fail "Attempt to add duplicate key";
     ram <- HashMap.add hash (pos, kind) ram
 
   method mem hash = match self#find_option hash with

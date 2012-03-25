@@ -68,13 +68,11 @@ let decode_time time =
 	  nsec ^ String.make (9-len) ' '
 	else nsec in
       (Int64.of_string sec, Int64.of_string nsec)
-    | _ -> Log.failure ("Invalid time data", ["time", time])
+    | _ -> Log.failf "Invalid time data: '%S'" time
 
 let float_of_time time =
   let (sec, nsec) = decode_time time in
-  Log.debug (fun () -> "float_of_time", ["time", time;
-					 "sec", Int64.to_string sec;
-					 "nsec", Int64.to_string nsec]);
+  Log.debugf "float_of_time %s, sec=%Ld, nsec=%Ld" time sec nsec;
   (Int64.to_float sec (* +. Int64.to_float nsec /. 1.0e9 *))
 
 let get_time key map = float_of_time (SM.find key map)
@@ -102,8 +100,7 @@ let restore_stat path kind props = match kind with
   | "CHR" | "BLK" | "FIFO" | "SOCK" ->
     let is_dev = SM.mem "rdev" props in
     if is_dev && not (is_root ()) then
-      Log.warn (fun () ->
-	"Cannot restore device as non-root", ["path", path])
+      Log.warnf "Cannot restore device node as non-root: %S" path
     else begin
       let dev = if is_dev then get_int64 "rdev" props else 0L in
       with_umask 0 (make_special path kind (get_int "mode" props)) dev;
@@ -113,7 +110,7 @@ let restore_stat path kind props = match kind with
     end
 
   | _ ->
-    Log.warn (fun () -> "TODO: Restore kind", ["kind", kind; "path", path])
+    Log.warnf "TODO: Restore kind '%s %S" kind path
 
 external realpath : string -> string = "db_realpath"
 
@@ -135,6 +132,6 @@ let mountpoint_of path =
       if astat.Unix.st_dev = bstat.Unix.st_dev then
 	loop rest
       else a
-    | [] -> Log.failure ("Empty path", ["path", path; "rpath", rpath]) in
+    | [] -> Log.failf "Empty path: path=%S, rpath=%S" path rpath in
   let stats = List.map Unix.lstat parts in
   loop (List.combine parts stats)
