@@ -5,6 +5,10 @@
 
 KIND = native
 
+# Build typerex info.
+# Comment out to build without
+# export OCAMLFIND_CONF := $(PWD)/etc/findlib-typerex.conf
+
 TARGETS = test.$(KIND) odump.$(KIND)
 all: .force
 	ocamlbuild $(TARGETS)

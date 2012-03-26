@@ -5,6 +5,8 @@
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(shell)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: thread
 
+<*.ml> or <*.mli>: annot
+
 # Enable this to get camlp4of.
 # TODO: Figure out how to pull in other extensions.
 # <*.ml> or <*.mli>: camlp4of

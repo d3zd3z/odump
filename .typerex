@@ -1,0 +1,5 @@
+CMT _build
+
+# Where to find sources for various libraries we depend upon.
+/home/davidb/ocaml/batteries-included/src
+.
