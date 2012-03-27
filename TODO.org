@@ -33,6 +33,7 @@
    - [X] progress meter on backup
    - [ ] manual prune of expired cache entries
    - [ ] flush pool and index files on write
+   - [ ] Use uuid of fs on non-btrfs filesystems
 
 ** Tasks to extend functionality
 

@@ -141,10 +141,14 @@ let restore path node dest =
     Restore.run_restore pool node dest)
 
 let make_cache path hash backup_dir =
-  let cache_name = Misc.cache_path path backup_dir in
+  let cache_name = Mountpoint.make_cache_path path backup_dir in
   let hash = Hash.of_string hash in
   File_pool.with_file_pool path (fun pool ->
     Seendb.make_cache pool cache_name hash)
+
+let show_cache path =
+  let cache_name = Mountpoint.cache_path path in
+  printf "Cache base name would be: %S\n" cache_name
 
 let create_pool path =
   File_pool.create_file_pool path
@@ -157,7 +161,7 @@ let pool_clone src_path dest_path hashes =
 
 let dump pool_path backup_path atts =
   File_pool.with_file_pool pool_path (fun pool ->
-    let cache = Misc.cache_path pool_path backup_path in
+    let cache = Mountpoint.make_cache_path pool_path backup_path in
     Backup.save pool cache backup_path atts)
 
 (** {4 Argument processing} *)
@@ -194,6 +198,10 @@ let command_list usage = function
 
 let command_make_cache usage = function
   | [node; backup_dir] -> make_cache (must_pool usage) node backup_dir
+  | _ -> usage ()
+
+let command_show_cache usage = function
+  | [path] -> show_cache path
   | _ -> usage ()
 
 let command_du usage = function
@@ -269,6 +277,10 @@ let commands = Map.StringMap.of_enum (List.enum [
 		  usage = "odump make-cache -pool <path> <hash> <path>";
 		  args = [ pool_arg ];
 		  action = command_make_cache };
+  "show-cache", { help = "Show name of cache file";
+		  usage = "odump show-cache <path>";
+		  args = [ ];
+		  action = command_show_cache };
   "du", { help = "Show space used";
 	  usage = "odump du -pool <path> <hash>";
 	  args = [ pool_arg ];
