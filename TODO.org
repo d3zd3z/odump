@@ -80,10 +80,11 @@
    - [X] Don't use the Batteries handler, but use the exposed argument
      spec type.
 
-   - [ ] Compute a version string and encoding it into the
+   - [X] Compute a version string and encoding it into the
      executable.  I'm thinking of finding the most recent tag, and
      then using a timestamp of the HEAD commit if the tree is dirty
      (rather than just a hash).
+   - [ ] Make the version code smarter about not being in a git repo.
 
    - [ ] Show dir and nondir counts when doing backups.
 

@@ -236,6 +236,10 @@ let command_receiver usage = function
   | [] -> Remote_receiver.process ()
   | _ -> usage ()
 
+let command_version usage = function
+  | [] -> printf "odump version %s\n" Version.version
+  | _ -> usage ()
+
 let remote_commands = Map.StringMap.of_enum (List.enum [
   "ping", { help = "Test a remote connection";
 	    usage = "odump remote -client name ping";
@@ -313,6 +317,10 @@ let commands = Map.StringMap.of_enum (List.enum [
 		usage = "intentionally undocumented";
 		args = [];
 		action = command_receiver };
+  "version", { help = "Show program version";
+	       usage = "version";
+	       args = [];
+	       action = command_version };
 ])
 
 let usage () =
