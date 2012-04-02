@@ -41,7 +41,8 @@ let flatten_path path prefix suffix =
    builds the directory if necessary. *)
 let cache_path backup_path =
   let canonical = Dbunix.mountpoint_of backup_path in
-  flatten_path canonical "cache" ".sqlite"
+  let base = "cache-" ^ Unix.gethostname () in
+  flatten_path canonical base ".sqlite"
 
 let make_cache_path pool_dir backup_path =
   let cp = cache_path backup_path in
