@@ -48,4 +48,4 @@ let make_cache_path pool_dir backup_path =
   let cp = cache_path backup_path in
   let seen_dir = Filename.concat pool_dir "seen" in
   mkdir_safely seen_dir;
-  (Filename.concat seen_dir cp) ^ ".sqlite"
+  Filename.concat seen_dir cp
