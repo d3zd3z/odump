@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Uuidm" rel="Chapter" href="Uuidm.html"><link title="UUIDs" rel="Section" href="#1_UUIDs">
+<title>Uuidm</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="index.html">Up</a>
+&nbsp;</div>
+<center><h1>Module <a href="type_Uuidm.html">Uuidm</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Uuidm: <code class="code"><span class="keyword">sig</span></code> <a href="Uuidm.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>Universally unique identifiers (UUIDs).  
+<p>
+
+    <code class="code"><span class="constructor">Uuidm</span></code> implements 128 bits universally unique identifiers version
+    3, 5 (name based with MD5, SHA-1 hashing) and 4 (random based)
+    according to <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
+<p>
+
+    <em>Release 0.9.4 - Daniel Bünzli &lt;daniel.buenzli at erratique.ch&gt; </em>
+<p>
+
+    <span id="3_References"><h3>References</h3></span>
+    <ul>
+<li>P. Leach et al.
+    <em><a href="http://www.ietf.org/rfc/rfc4122.txt">A universally unique identifier 
+     (UUID) URN Namespace</a></em>, 2005.</li>
+</ul>
+<br>
+<hr width="100%">
+<br>
+<span id="1_UUIDs"><h1>UUIDs</h1></span><br>
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+<div class="info">
+The type for UUIDs.<br>
+</div>
+
+<pre><span id="TYPEversion"><span class="keyword">type</span> <code class="type"></code>version</span> = <code class="type">[ `V3 of <a href="Uuidm.html#TYPEt">t</a> * string | `V4 | `V5 of <a href="Uuidm.html#TYPEt">t</a> * string ]</code> </pre>
+<div class="info">
+The type for UUID versions and generation parameters. <code class="code"><span class="keywordsign">`</span><span class="constructor">V3</span></code> and <code class="code"><span class="keywordsign">`</span><span class="constructor">V5</span></code>
+    specify a namespace and a name for the generation. <code class="code"><span class="keywordsign">`</span><span class="constructor">V4</span></code> is random based 
+    with a private state seeded with <code class="code"><span class="constructor">Random</span>.<span class="constructor">State</span>.make_self_init</code>, use 
+    <a href="Uuidm.html#VALv4_gen"><code class="code"><span class="constructor">Uuidm</span>.v4_gen</code></a> to specify your own seed.<br>
+</div>
+
+<pre><span id="VALnil"><span class="keyword">val</span> nil</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">nil</code> is the nil UUID.<br>
+</div>
+<pre><span id="VALns_dns"><span class="keyword">val</span> ns_dns</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">ns_dns</code> is the DNS namespace UUID.<br>
+</div>
+<pre><span id="VALns_url"><span class="keyword">val</span> ns_url</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">ns_url</code> is the URL namespace UUID.<br>
+</div>
+<pre><span id="VALns_oid"><span class="keyword">val</span> ns_oid</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">ns_oid</code> is the ISO OID namespace UUID.<br>
+</div>
+<pre><span id="VALns_X500"><span class="keyword">val</span> ns_X500</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">ns_dn</code> is the X.500 DN namespace UUID.<br>
+</div>
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Uuidm.html#TYPEversion">version</a> -> <a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">create version</code> is an UUID of the given <code class="code">version</code>.<br>
+</div>
+<pre><span id="VALv3"><span class="keyword">val</span> v3</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a> -> string -> <a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">v3 ns n</code> is <code class="code">create <span class="keywordsign">`</span><span class="constructor">V3</span> (ns, n)</code>.<br>
+</div>
+<pre><span id="VALv5"><span class="keyword">val</span> v5</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a> -> string -> <a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">v5 ns n</code> is <code class="code">create <span class="keywordsign">`</span><span class="constructor">V5</span> (ns, n)</code>.<br>
+</div>
+<pre><span id="VALv4_gen"><span class="keyword">val</span> v4_gen</span> : <code class="type">Random.State.t -> unit -> <a href="Uuidm.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">v4 seed</code> is a function that generates random version 4 UUIDs with
+    the given <code class="code">seed</code>.<br>
+</div>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a> -> <a href="Uuidm.html#TYPEt">t</a> -> int</code></pre><div class="info">
+Total order on UUIDs.<br>
+</div>
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a> -> <a href="Uuidm.html#TYPEt">t</a> -> bool</code></pre><div class="info">
+<code class="code">equal u u'</code> is <code class="code"><span class="keyword">true</span></code> iff <code class="code">u</code> and <code class="code">u'</code> are equal.<br>
+</div>
+<pre><span id="VALof_bytes"><span class="keyword">val</span> of_bytes</span> : <code class="type">?pos:int -> string -> <a href="Uuidm.html#TYPEt">t</a> option</code></pre><div class="info">
+<code class="code">of_bytes pos s</code> is the UUID represented by the 16 bytes starting
+    at <code class="code">pos</code> in <code class="code">s</code> (<code class="code">pos</code> defaults to <code class="code">0</code>).  Returns <code class="code"><span class="constructor">None</span></code> if the
+    string is not long enough.<br>
+</div>
+<pre><span id="VALto_bytes"><span class="keyword">val</span> to_bytes</span> : <code class="type"><a href="Uuidm.html#TYPEt">t</a> -> string</code></pre><div class="info">
+<code class="code">to_bytes u</code> is <code class="code">u</code> as a 16 bytes long string.<br>
+</div>
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">?pos:int -> string -> <a href="Uuidm.html#TYPEt">t</a> option</code></pre><div class="info">
+<code class="code">of_string pos s</code> converts the substring of <code class="code">s</code> starting at <code class="code">pos</code>
+    (defaults to <code class="code">0</code>) of the form <code class="code"><span class="string">"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"</span></code>
+    where X is a lower or upper case hexadecimal number to an
+    UUID. Returns <code class="code"><span class="constructor">None</span></code> if a parse error occured.<br>
+</div>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?upper:bool -> <a href="Uuidm.html#TYPEt">t</a> -> string</code></pre><div class="info">
+<code class="code">to_string u</code> is <code class="code">u</code> as a string of the form
+    <code class="code"><span class="string">"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"</span></code> where X is
+    a lower case hexadecimal number (or upper if <code class="code">upper</code> is
+    <code class="code"><span class="keyword">true</span></code>).<br>
+</div>
+<pre><span id="VALprint"><span class="keyword">val</span> print</span> : <code class="type">?upper:bool -> Format.formatter -> <a href="Uuidm.html#TYPEt">t</a> -> unit</code></pre><div class="info">
+See <a href="Uuidm.html#VALto_string"><code class="code"><span class="constructor">Uuidm</span>.to_string</code></a>.<br>
+</div>
+</body></html>

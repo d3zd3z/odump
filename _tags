@@ -1,6 +1,6 @@
-<*.ml> or <*.mli> or <*.native> or <*.byte>: package(batteries), package(oUnit), package(cryptokit), package(zip), package(uuidm), package(pxp)
+<*.ml> or <*.mli> or <*.native> or <*.byte>: package(batteries), package(oUnit), package(cryptokit), package(camlzip), package(pxp)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(sqlite3)
-<*.ml> or <*.mli> or <*.native> or <*.byte>: package(config-file)
+# <*.ml> or <*.mli> or <*.native> or <*.byte>: package(config-file)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(netstring)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(shell)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: thread
@@ -16,3 +16,6 @@
 
 # Jean-Christophe Filliatre's utilities
 <ds>: include
+
+<config-file-1.0>: include
+<uuidm-0.9.4>: include
