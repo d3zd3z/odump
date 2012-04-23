@@ -4,6 +4,13 @@ open Batteries_uni
 
 module StringMap = Map.StringMap
 
+(* Represent this pathname in a nice fixed-width. *)
+let clean_name name =
+  let width = 67 in
+  let len = String.length name in
+  if len <= width + 3 then name
+  else "..." ^ (String.sub name (len - width) width)
+
 (* Wrap a storage pool in a tracker that monitors a progress meter. *)
 class write_track_pool (inner : #Pool.writable) =
 object (self)
@@ -14,6 +21,7 @@ object (self)
   val mutable uncompressed = 0L
   val mutable dup = 0L
   val mutable skip = 0L
+  val mutable path = ""
 
   (* TODO: How to share this with the node meter. *)
   initializer (
@@ -26,7 +34,8 @@ object (self)
       Log.format_size fmt "%s total@\n" total;
       Log.format_size_rate fmt "  %s uncompressed (%s/sec)@\n" uncompressed age;
       Log.format_size_rate fmt "  %s compressed   (%s/sec)  " compressed age;
-      Log.format_ratio fmt "%.1f%%@." uncompressed compressed in
+      Log.format_ratio fmt "%.1f%%@\n" uncompressed compressed;
+      Format.fprintf fmt "path: %s@." (clean_name path) in
     Log.set_meter (Log.build_format_meter show))
 
   method finish = Log.finish_meter ()
@@ -45,6 +54,12 @@ object (self)
   method add_skip size =
     skip <- Int64.add skip size;
     Log.update_meter ()
+
+  method with_path : 'a. string -> (unit -> 'a) -> 'a =
+    fun new_path thunk ->
+      let old_path = path in
+      path <- new_path;
+      Std.finally (fun () -> path <- old_path) thunk ()
 
   method mem = inner#mem
   method find = inner#find
@@ -153,20 +168,21 @@ let save' pool cache backup_path atts =
     | (kind, _) -> Log.failf "Root of backup is not a DIR: %S" kind in
 
   let rec walk path kind props =
-    let props = match kind with
-      | "DIR" -> get_dir path kind props
+    pool#with_path path (fun () ->
+      let props = match kind with
+	| "DIR" -> get_dir path kind props
 
-      | "REG" ->
-	let hash = store_file pool path in
-	StringMap.add "data" (Hash.to_string hash) props
+	| "REG" ->
+	    let hash = store_file pool path in
+	    StringMap.add "data" (Hash.to_string hash) props
 
-      | "LNK" ->
-	let target = Unix.readlink path in
-	StringMap.add "target" target props
+	| "LNK" ->
+	    let target = Unix.readlink path in
+	    StringMap.add "target" target props
 
-      | _ -> props
-    in
-    (Nodes.try_put pool (Nodes.NodeNode (kind, props)), props)
+	| _ -> props
+      in
+      (Nodes.try_put pool (Nodes.NodeNode (kind, props)), props))
 
   and get_dir path kind dir_props =
     let dircache = Cache.get cache dir_props pool#add_skip in
