@@ -3,3 +3,6 @@ _build/
 # Ignore the links to build versions
 *.native
 *.byte
+
+# vim swap files
+.*.swp
