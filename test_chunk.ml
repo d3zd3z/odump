@@ -78,7 +78,7 @@ let verify_info infos chan =
 let verify_data infos chan =
   let each (pos, ch) =
     seek_in chan pos;
-    let ch2 = Chunk.read chan in
+    let ch2, _ = Chunk.read chan in
     assert_equal ch#hash ch2#hash;
     assert_equal ch#data ch2#data;
     assert_equal ch#kind ch2#kind in

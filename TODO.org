@@ -28,7 +28,7 @@
    - [X] index recovery
    - [ ] 64-bit uid/gid (not sure this is ever necessary)
    - [X] pool locking
-   - [ ] pool hash verification
+   - [X] pool hash verification
    - [ ] don't cross device boundaries
    - [X] progress meter on backup
    - [ ] manual prune of expired cache entries

@@ -42,12 +42,13 @@ val read_info: in_channel -> info
 (** Read the header of the next chunk in the channel.  Returns the
     info data about it. *)
 
-val read: in_channel -> chunk
+val read: in_channel -> (chunk * info)
 (** Read the next chunk from the given channel. *)
 
 class type chunk_file =
 object
   method read: int -> chunk
+  method check: int -> int
   (* method read_unchecked: int -> (chunk * Hash.t) *)
   method read_info: int -> info
   method append: chunk -> int

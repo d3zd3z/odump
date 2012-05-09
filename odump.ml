@@ -240,6 +240,10 @@ let command_version usage = function
   | [] -> printf "odump version %s\n" Version.version
   | _ -> usage ()
 
+let command_verify usage = function
+  | (file :: files) -> Verify.verify (file :: files)
+  | _ -> usage ()
+
 let remote_commands = Map.StringMap.of_enum (List.enum [
   "ping", { help = "Test a remote connection";
 	    usage = "odump remote -client name ping";
@@ -321,6 +325,10 @@ let commands = Map.StringMap.of_enum (List.enum [
 	       usage = "version";
 	       args = [];
 	       action = command_version };
+  "verify", { help = "Verify pool file(s)";
+              usage = "verify file1.dat file2.dat ...";
+              args = [ ];
+              action = command_verify };
 ])
 
 let usage () =

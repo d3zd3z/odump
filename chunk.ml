@@ -187,13 +187,16 @@ let get_header chan =
 
 let verify_hashes = ref false
 
-let read_info chan =
-  let header = get_header chan in
+let convert_header header =
   let padding = 15 land (-header.h_clen) in
   { in_hash = header.h_hash;
     in_kind = header.h_kind;
     in_data_length = if header.h_len = -1 then header.h_clen else header.h_len;
     in_write_size = header_size + header.h_clen + padding }
+
+let read_info chan =
+  let header = get_header chan in
+  convert_header header
 
 let read chan =
   let header = get_header chan in
@@ -211,13 +214,14 @@ let read chan =
 	(Hash.to_string header.h_hash)
 	(Hash.to_string computed_hash)
   end;
-  chunk
+  (chunk, convert_header header)
 
 (* {6 Files of chunks} *)
 
 class type chunk_file =
 object
   method read: int -> chunk
+  method check: int -> int
   (* method read_unchecked: int -> (chunk * Hash.t) *)
   method read_info: int -> info
   method append: chunk -> int
@@ -260,7 +264,16 @@ object (self)
   method read offset =
     let chan = self#prepare_read in
     seek_in chan offset;
-    read chan
+    let (chunk, _) = read chan in
+    chunk
+
+  (* Read a chunk at offset, verifying the hash if verify_hashes is set, and
+   * return the offset of the next chunk to read. *)
+  method check offset =
+    let chan = self#prepare_read in
+    seek_in chan offset;
+    let (_, info) = read chan in
+    offset + info.in_write_size
 
   method read_info offset =
     let chan = self#prepare_read in
