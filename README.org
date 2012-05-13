@@ -24,3 +24,19 @@ Introduction goes here
        libcryptokit-ocaml-dev libounit-ocaml-dev libpxp-ocaml-dev \
        libuuidm-ocaml-dev libzip-ocaml-dev libfindlib-ocaml-dev \
        libsqlite3-ocaml-dev
+
+On Arch, the following seems sufficient to build (many are AUR):
+
+  - ocaml
+  - ocaml-findlib
+  - ocaml-batteries (pulls in ocaml-camomile, ocaml-ounit)
+  - ocaml-zip
+  - ocaml-cryptokit
+  - ocamlnet (pulls in ocaml-pcre, ocaml-ssl)
+  - ocaml-pxp
+  - ocaml-sqlite3
+
+Unfortunately, several libraries pull in camomile, which has a
+dependency on a fairly large runtime library.  TODO: Figure out how to
+point directly at this library so that this can be used on a rescue
+image.

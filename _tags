@@ -1,4 +1,10 @@
-<*.ml> or <*.mli> or <*.native> or <*.byte>: package(batteries), package(oUnit), package(cryptokit), package(camlzip), package(pxp)
+<*.ml> or <*.mli> or <*.native> or <*.byte>: package(batteries), package(oUnit), package(cryptokit), package(pxp)
+
+# In godi, this is called 'camlzip', everything else just calls it
+# zip.  Pick the appropriate one.
+#<*.ml> or <*.mli> or <*.native> or <*.byte>: package(camlzip)
+<*.ml> or <*.mli> or <*.native> or <*.byte>: package(zip)
+
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(sqlite3)
 # <*.ml> or <*.mli> or <*.native> or <*.byte>: package(config-file)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(netstring)
