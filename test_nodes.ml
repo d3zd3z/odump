@@ -1,12 +1,12 @@
 (* Testing round-trip of nodes. *)
 
-open Batteries_uni
+open Batteries
 
 open OUnit
 open Printf
 open TUtil
 
-module SM = Map.StringMap
+module SM = Maps.StringMap
 
 let int_hash num = Hash.of_data [string_of_int num]
 

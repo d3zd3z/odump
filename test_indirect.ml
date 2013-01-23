@@ -1,6 +1,6 @@
 (* Testing indirect nodes. *)
 
-open Batteries_uni
+open Batteries
 
 open OUnit
 open Printf

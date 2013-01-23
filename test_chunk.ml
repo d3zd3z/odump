@@ -1,4 +1,4 @@
-open Batteries_uni
+open Batteries
 open LegacyIO
 open OUnit
 open Printf
@@ -107,9 +107,9 @@ let cfile_verify_chunks cfile infos =
 
 let io tmpdir =
   let name = Filename.concat tmpdir "foo.data" in
-  let infos = Std.with_dispose ~dispose:close_out write_chunks (open_out_bin name) in
-  Std.with_dispose ~dispose:close_in (verify_info infos) (open_in_bin name);
-  Std.with_dispose ~dispose:close_in (verify_data infos) (open_in_bin name)
+  let infos = with_dispose ~dispose:close_out write_chunks (open_out_bin name) in
+  with_dispose ~dispose:close_in (verify_info infos) (open_in_bin name);
+  with_dispose ~dispose:close_in (verify_data infos) (open_in_bin name)
 
 let file tmpdir =
   let name = Filename.concat tmpdir "file.data" in
@@ -118,7 +118,7 @@ let file tmpdir =
     cfile_verify_chunks cfile infos;
     cfile_verify_chunks cfile (List.rev infos)
   in
-  Std.with_dispose ~dispose:(fun x -> x#close) process (Chunk.open_chunk_file name)
+  with_dispose ~dispose:(fun x -> x#close) process (Chunk.open_chunk_file name)
 
 let suite = "chunk" >::: [
   "compression" >:: compression;

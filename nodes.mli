@@ -1,15 +1,15 @@
 (* Backup nodes *)
 
-open Batteries_uni
+open Batteries
 
 type indirect_kind =
   | Dir_Indirect
   | Data_Indirect
 
 type node =
-  | BackupNode of float * string Map.StringMap.t
-  | NodeNode of string * string Map.StringMap.t
-  | DirNode of Hash.t Map.StringMap.t
+  | BackupNode of float * string Maps.StringMap.t
+  | NodeNode of string * string Maps.StringMap.t
+  | DirNode of Hash.t Maps.StringMap.t
   | IndirectNode of indirect_kind * int * Hash.t array
   | NullNode
   | BlobNode of string

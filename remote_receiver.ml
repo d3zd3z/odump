@@ -1,6 +1,6 @@
 (* The remote receiver *)
 
-open Batteries_uni
+open Batteries
 open Remote
 
 module Marshal = Legacy.Marshal

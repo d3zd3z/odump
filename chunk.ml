@@ -13,7 +13,7 @@
  * compressed version will be used for network transfer or the storage
  * pool. *)
 
-open Batteries_uni
+open Batteries
 open LegacyIO
 open Binary
 

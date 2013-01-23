@@ -1,8 +1,8 @@
 (* Backup restoration. *)
 
-open Batteries_uni
+open Batteries
 
-module SM = Map.StringMap
+module SM = Maps.StringMap
 module I64M = Map.Make(Int64)
 
 class restore_visitor dest =

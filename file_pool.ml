@@ -1,10 +1,10 @@
 (* File-based storage pools *)
 
-open Batteries_uni
+open Batteries
 (* open LegacyIO *)
 open Printf
 
-module StringMap = Map.StringMap
+module StringMap = Maps.StringMap
 
 let default_limit = 640 * 1024 * 1024
 let limit_lower_bound = 1 lsl 20
@@ -24,7 +24,7 @@ let get_uuid () =
   let buf = Buffer.create 57 in
   Buffer.add_string buf "http://random.davidb.org/";
   let random = String.create 16 in
-  Std.with_dispose ~dispose:Legacy.close_in
+  with_dispose ~dispose:Legacy.close_in
     (fun chan -> Legacy.really_input chan random 0 (String.length random))
     (Legacy.open_in_bin "/dev/urandom");
   for i = 0 to String.length random - 1 do
@@ -71,10 +71,10 @@ type props = {
   p_newfile: bool }
 
 let decode_backup_properties map =
-  { p_uuid = Option.get **> Uuidm.of_string **> StringMap.find "uuid" map;
-    p_limit = Option.map_default int_of_string default_limit **>
+  { p_uuid = Option.get @@ Uuidm.of_string @@ StringMap.find "uuid" map;
+    p_limit = Option.map_default int_of_string default_limit @@
       StringMap.Exceptionless.find "limit" map;
-    p_newfile = Option.map_default bool_of_string false **>
+    p_newfile = Option.map_default bool_of_string false @@
       StringMap.Exceptionless.find "newfile" map }
 
 let to_index_name path =
@@ -111,10 +111,10 @@ let recover_index name file index =
 let find_backup_nodes path =
   let redata name =
     if Str.string_match data_re name 0 then
-      Some (int_of_string **> Str.matched_group 1 name)
+      Some (int_of_string @@ Str.matched_group 1 name)
     else None in
   let nums = Sys.files_of path //@ redata in
-  let nums = List.sort ~cmp:(fun a b -> compare b a) (List.of_enum nums) in
+  let nums = List.sort (fun a b -> compare b a) (List.of_enum nums) in
 
   let lookup num =
     let fname = make_pool_name path num in
@@ -179,7 +179,7 @@ let open_file_pool path =
   let lock_fd = open_lock (Filename.concat path "lock") in
 
 object (self)
-  val mutable props = decode_backup_properties **> read_flat_properties props_name
+  val mutable props = decode_backup_properties @@ read_flat_properties props_name
   val mutable nodes = find_backup_nodes path
   val mutable dirty = false
 
@@ -235,7 +235,7 @@ object (self)
   method find_option hash =
     Option.map (fun (chunk, _, _) -> chunk ()) (self#find_full hash)
 
-  method find hash = Option.get **> self#find_option hash
+  method find hash = Option.get @@ self#find_option hash
 
   (* method flush_files = *)
   (*   match nodes with *)
@@ -273,7 +273,7 @@ object (self)
   method get_backups =
     let backups_name = Filename.concat metadata "backups.txt" in
     try
-      let get inp = List.of_enum **> Enum.map Hash.of_string **> IO.lines_of inp in
+      let get inp = List.of_enum @@ Enum.map Hash.of_string @@ IO.lines_of inp in
       with_dispose ~dispose:close_in get (open_in backups_name)
     with
 	Sys_error _ -> []

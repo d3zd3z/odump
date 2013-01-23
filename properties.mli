@@ -1,8 +1,8 @@
 (* Properties are Maps that can be encoded in a small number of XML formats. *)
 
-open Batteries_uni
+open Batteries
 
-type t = string Map.StringMap.t
+type t = string Maps.StringMap.t
 
 val of_java_xml: string -> t
 (** Decode a Java XML type of property. *)

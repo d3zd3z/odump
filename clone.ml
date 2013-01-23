@@ -1,6 +1,6 @@
 (* Cloning of trees *)
 
-open Batteries_uni
+open Batteries
 
 class clone_meter =
 object

@@ -1,6 +1,6 @@
 (* Test the seendb cache. *)
 
-open Batteries_uni
+open Batteries
 
 open OUnit
 open Printf
@@ -54,7 +54,7 @@ let expire path pool =
   let nodes = Seendb.Int64Map.of_enum nodes in
   store cache_name 12345L nodes;
   let isgood { Seendb.n_expire } = n_expire >= now in
-  let nodes = Seendb.Int64Map.filter isgood nodes in
+  let nodes = Seendb.Int64Map.filterv isgood nodes in
   check cache_name 12345L nodes
 
 let suite = "seendb" >::: [

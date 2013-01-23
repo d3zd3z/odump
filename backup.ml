@@ -1,8 +1,8 @@
 (* Saving of backups *)
 
-open Batteries_uni
+open Batteries
 
-module StringMap = Map.StringMap
+module StringMap = Maps.StringMap
 
 (* Represent this pathname in a nice fixed-width. *)
 let clean_name name =
@@ -59,7 +59,7 @@ object (self)
     fun new_path thunk ->
       let old_path = path in
       path <- new_path;
-      Std.finally (fun () -> path <- old_path) thunk ()
+      finally (fun () -> path <- old_path) thunk ()
 
   method mem = inner#mem
   method find = inner#find

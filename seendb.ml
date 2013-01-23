@@ -1,6 +1,6 @@
 (* Database of files that have been seen. *)
 
-open Batteries_uni
+open Batteries
 
 let schema = {
   (* The schema version covers both the SQL schema, and the structure
@@ -13,7 +13,7 @@ info blob not null)";
        "create index seen_expire_index on seen(expire)" |]
 }
 
-module SM = Map.StringMap
+module SM = Maps.StringMap
 module Int64Map = Map.Make(Int64)
 
 type dir_node = {
@@ -95,7 +95,7 @@ let close cache = Db.close cache
 let with_cache path f = with_dispose ~dispose:close f (open_cache path)
 
 let remove_expired nodes =
-  Int64Map.filter (fun { n_expire } -> n_expire > start_time) nodes
+  Int64Map.filterv (fun { n_expire } -> n_expire > start_time) nodes
 
 let get cache pino =
   match Db.sqln cache "select info from seen where pino = ?" [Db.Data.INT pino] with

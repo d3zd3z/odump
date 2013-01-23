@@ -1,6 +1,6 @@
 (* Logger. *)
 
-open Batteries_uni
+open Batteries
 
 val log : Netlog.level -> string -> unit
 val logf : Netlog.level -> ('a, unit, string, unit) format4 -> 'a

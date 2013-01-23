@@ -1,6 +1,6 @@
 (* Interface to a storage database. *)
 
-open Batteries_uni
+open Batteries
 open Printf
 
 module Data = Sqlite3.Data

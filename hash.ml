@@ -1,6 +1,6 @@
 (* Sha1 hashes. *)
 
-open Batteries_uni
+open Batteries
 
 type t = string
 

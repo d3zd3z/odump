@@ -1,14 +1,14 @@
 (* File index *)
 
-open Batteries_uni
+open Batteries
 open LegacyIO
 
 open Binary
 
 module HashMap = Map.Make(Hash)
-module StringMap = Map.StringMap
-module StringSet = Set.StringSet
-module IntMap = Map.IntMap
+module StringMap = Maps.StringMap
+module StringSet = Set.Make(struct type t = string let compare = compare end)
+module IntMap = Map.Make(struct type t = int let compare = compare end)
 
 open Enum.Infix
 

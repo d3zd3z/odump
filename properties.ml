@@ -1,8 +1,8 @@
 (* Property files *)
 
-open Batteries_uni
+open Batteries
 
-module StringMap = Map.StringMap
+module StringMap = Maps.StringMap
 
 type t = string StringMap.t
 

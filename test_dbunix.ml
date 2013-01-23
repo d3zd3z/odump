@@ -1,8 +1,8 @@
-open Batteries_uni
+open Batteries
 open OUnit
 open Printf
 
-module SM = Map.StringMap
+module SM = Maps.StringMap
 
 (* Read the current directory, and verify that every entry has the
    right inode number. *)

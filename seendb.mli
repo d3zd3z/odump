@@ -1,6 +1,6 @@
 (* Managing the database of seen files *)
 
-open Batteries_uni
+open Batteries
 
 val make_cache : #Pool.readable -> string -> Hash.t -> unit
 (** [make_cache pool path hash] updates the seen database at the given
@@ -21,7 +21,7 @@ type cache_entry = dir_node Int64Map.t
     match, the file is unlikely to have been changed.  The expire time is
     the date that this entry will expire. *)
 
-val entry_of_node : Hash.t -> string Map.StringMap.t -> dir_node
+val entry_of_node : Hash.t -> string Maps.StringMap.t -> dir_node
 (** [entry_of_node hash props] takes the properties from a backup node
     and extracts a dir_node from it, generating a fresh expiration. *)
 

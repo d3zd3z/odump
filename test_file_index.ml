@@ -1,6 +1,6 @@
 (* Testing the file index. *)
 
-open Batteries_uni
+open Batteries
 open LegacyIO
 
 open OUnit

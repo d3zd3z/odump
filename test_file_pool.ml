@@ -1,4 +1,4 @@
-open Batteries_uni
+open Batteries
 open LegacyIO
 
 open OUnit
@@ -32,7 +32,7 @@ object (self)
 
   method check_one index =
     let chunk = make_random_chunk 32 index in
-    assert_equal chunk#data **> ((Option.get pool)#find chunk#hash)#data
+    assert_equal chunk#data @@ ((Option.get pool)#find chunk#hash)#data
 
   method check =
     ISet.iter self#check_one known

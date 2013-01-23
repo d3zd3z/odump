@@ -3,7 +3,7 @@
 
 module LegacyUnix = Unix
 
-open Batteries_uni
+open Batteries
 open Remote
 
 module Unix = LegacyUnix
@@ -28,7 +28,7 @@ let connect () =
   let cmd = Shell.cmd cmd args in
   (* TODO: How to communicate errors back? *)
   let _ = Thread.create (fun () ->
-    Std.finally (fun () ->
+    finally (fun () ->
       Unix.close send_rd;
       Unix.close receive_wr)
       (Shell.call ~stdin:(Shell.from_fd send_rd)

@@ -1,6 +1,6 @@
 (* Test utilities. *)
 
-open Batteries_uni
+open Batteries
 open LegacyIO
 
 (* Similar to base64, but filename safe *)
@@ -47,12 +47,12 @@ let with_temp_dir op () =
     with
 	Unix.Unix_error _ -> loop (count - 1) in
   let path = loop 5 in
-  Std.with_dispose ~dispose:cleanup op path
+  with_dispose ~dispose:cleanup op path
 
 let with_temp_pool op =
   let op2 dir =
     File_pool.create_file_pool dir;
-    Std.with_dispose ~dispose:(fun p -> p#close) (fun p -> op dir p)
+    with_dispose ~dispose:(fun p -> p#close) (fun p -> op dir p)
       (File_pool.open_file_pool dir) in
  with_temp_dir op2
 

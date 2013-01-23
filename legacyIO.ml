@@ -4,7 +4,7 @@
    [open LegacyIO]
    which will shadow the IO operations with the legacy versions. *)
 
-open Batteries_uni
+open Batteries
 
 type in_channel = Legacy.in_channel
 let open_in_bin = Legacy.open_in_bin

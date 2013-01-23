@@ -1,6 +1,6 @@
 (* My unix lib. *)
 
-open Batteries_uni
+open Batteries
 
 type dir_handle
 val opendir : string -> dir_handle
@@ -13,7 +13,7 @@ val open_for_read : string -> file_descr
 (* Convenience utility *)
 val get_directory_contents : string -> (string * int64) list
 
-type stat = string Map.StringMap.t
+type stat = string Maps.StringMap.t
 type stat_info = string * stat
 val lstat : string -> stat_info
 
@@ -26,7 +26,7 @@ val dir_with_stats : string -> (string * stat_info) list
 (** Read the named directory, stat all of the files, and return the
     result, sorted by filename. *)
 
-val restore_stat : string -> string -> string Map.StringMap.t -> unit
+val restore_stat : string -> string -> string Maps.StringMap.t -> unit
 (** [Dbunix.restore_stat path kind stats] restores the file stats
     appropriately for the kind of file. *)
 

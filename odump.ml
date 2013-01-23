@@ -1,9 +1,9 @@
 (* odump driver *)
 
-open Batteries_uni
+open Batteries
 open Printf
 
-module StringMap = Map.StringMap
+module StringMap = Maps.StringMap
 
 let dump_fmt = "%Y-%m-%d_%H:%M"
 
@@ -36,7 +36,7 @@ let list path =
     let backups = pool#get_backups in
     let get hash = (hash, Nodes.get pool hash) in
     let backups = List.map get backups in
-    let backups = List.sort ~cmp:(fun (_, a) (_, b) -> backup_compare a b) backups in
+    let backups = List.sort (fun (_, a) (_, b) -> backup_compare a b) backups in
     List.iter (fun (hash, b) -> show_backup_node hash b) backups)
 
 let tree_show path node =
@@ -94,7 +94,7 @@ object (self)
 
   method private update hash kind size write_size =
     let index = pool#find_index hash in
-    let (write, count) = if BitSet.is_set seen index then (0, 0) else begin
+    let (write, count) = if BitSet.mem seen index then (0, 0) else begin
       BitSet.set seen index;
       (write_size, 1)
     end in
@@ -244,7 +244,7 @@ let command_verify usage = function
   | (file :: files) -> Verify.verify (file :: files)
   | _ -> usage ()
 
-let remote_commands = Map.StringMap.of_enum (List.enum [
+let remote_commands = Maps.StringMap.of_enum (List.enum [
   "ping", { help = "Test a remote connection";
 	    usage = "odump remote -client name ping";
 	    args = [ client_arg ];
@@ -260,7 +260,7 @@ let command_remote usage = function
 	(try List.find (fun n -> n.Config.client_name = c) Config.clients#get
 	 with Not_found -> Log.failf "Unknown client: %S" c)
     end;
-    match Map.StringMap.Exceptionless.find command remote_commands with
+    match Maps.StringMap.Exceptionless.find command remote_commands with
       | None ->
 	eprintf "Unknown remote command: '%s'\n" command;
 	exit 1
@@ -276,7 +276,7 @@ let command_remote usage = function
 	  exit 1 in
 	command.action show_use (List.rev !args)
 
-let commands = Map.StringMap.of_enum (List.enum [
+let commands = Maps.StringMap.of_enum (List.enum [
   "list", { help = "List backups available in a pool";
 	    usage = "odump list -pool <path>";
 	    args = [ pool_arg ];
@@ -334,7 +334,7 @@ let commands = Map.StringMap.of_enum (List.enum [
 let usage () =
   let out = IO.output_string () in
   let fmt = Format.formatter_of_output out in
-  let names = Map.StringMap.enum commands in
+  let names = Maps.StringMap.enum commands in
   Format.fprintf fmt "usage: odump <command> [<args>]@\n@\n";
   Format.fprintf fmt "commands: @[";
   Enum.iter (fun (name, {help}) -> Format.fprintf fmt "%-12s %s@\n" name help) names;
@@ -361,7 +361,7 @@ let main () =
      value from the config file. *)
   if !pool = None then pool := Config.pool#get;
 
-  match Map.StringMap.Exceptionless.find Sys.argv.(!Arg.current) commands with
+  match Maps.StringMap.Exceptionless.find Sys.argv.(!Arg.current) commands with
     | None ->
       eprintf "Unknown command: '%s'\n" Sys.argv.(!Arg.current);
       Arg.usage [] global_usage;

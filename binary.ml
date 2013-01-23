@@ -1,6 +1,6 @@
 (* Binary support. *)
 
-open Batteries_uni
+open Batteries
 open LegacyIO
 
 let get32le buf offset =

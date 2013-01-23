@@ -1,6 +1,6 @@
-open Batteries_uni
+open Batteries
 
-module SM = Map.StringMap
+module SM = Maps.StringMap
 
 type dir_handle = Unix.dir_handle
 
@@ -35,10 +35,10 @@ type stat = string SM.t
 type stat_info = string * stat
 let dir_with_stats path =
   let inames = get_directory_contents path in
-  let inames = List.sort ~cmp:(fun (_, a) (_, b) -> Int64.compare a b) inames in
+  let inames = List.sort (fun (_, a) (_, b) -> Int64.compare a b) inames in
   let lookup (name, _) = (name, lstat (Filename.concat path name)) in
   let nodes = List.map lookup inames in
-  List.sort ~cmp:(fun (a, _) (b, _) -> compare a b) nodes
+  List.sort (fun (a, _) (b, _) -> compare a b) nodes
 
 (* Call f a with the umask set accordingly, and restore after the
    call. *)

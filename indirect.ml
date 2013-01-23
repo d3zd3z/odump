@@ -1,6 +1,6 @@
 (* Indirect block management. *)
 
-open Batteries_uni
+open Batteries
 
 type t = {
   pool: Pool.writable;
@@ -73,7 +73,7 @@ module Dir = struct
   let ind_finish = finish
   type ind_t = t
 
-  module SM = Map.StringMap
+  module SM = Maps.StringMap
 
   type t = { pool: Pool.writable;
 	     limit: int;

@@ -1,6 +1,6 @@
 (* Logging. *)
 
-open Batteries_uni
+open Batteries
 
 let log = Netlog.log
 let logf = Netlog.logf

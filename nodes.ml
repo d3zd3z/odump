@@ -1,8 +1,8 @@
 (* Backup nodes. *)
 
-open Batteries_uni
+open Batteries
 
-module StringMap = Map.StringMap
+module StringMap = Maps.StringMap
 
 type indirect_kind =
   | Dir_Indirect
@@ -10,8 +10,8 @@ type indirect_kind =
 
 type node =
   | BackupNode of float * string StringMap.t
-  | NodeNode of string * string Map.StringMap.t
-  | DirNode of Hash.t Map.StringMap.t
+  | NodeNode of string * string Maps.StringMap.t
+  | DirNode of Hash.t Maps.StringMap.t
   | IndirectNode of indirect_kind * int * Hash.t array
   | NullNode
   | BlobNode of string
@@ -47,7 +47,7 @@ let decode_node chunk =
   match chunk#kind with
     | "back" ->
       let props = Properties.of_java_xml chunk#data in
-      let date = (float_of_string **> StringMap.find "_date" props) /. 1000.0 in
+      let date = (float_of_string @@ StringMap.find "_date" props) /. 1000.0 in
       let props = StringMap.remove "_date" props in
       BackupNode (date, props)
     | "node" ->

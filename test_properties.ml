@@ -1,4 +1,4 @@
-open Batteries_uni
+open Batteries
 
 open OUnit
 open Printf
@@ -15,7 +15,7 @@ let sample1 = "\
 <entry key=\"test\">foo</entry>\n\
 </properties>\n"
 
-let prop1 = Map.StringMap.of_enum **> List.enum [
+let prop1 = Maps.StringMap.of_enum @@ List.enum [
   "_date", "1331354632558";
   "kind", "snapshot";
   "hash", "f4d4a18a53bb4c779c7544642a03b36d8f5226c7";
