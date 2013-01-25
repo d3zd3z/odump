@@ -15,11 +15,11 @@ object
   (* Map from inode numbers to first path to reference them. *)
   val mutable hard_links = I64M.empty
 
-  method want_full_data = true
+  method! want_full_data = true
 
 
-  method! enter path chunk node = match node with
-    | Nodes.NodeNode ("DIR", props) ->
+  method! enter path _chunk node = match node with
+    | Nodes.NodeNode ("DIR", _props) ->
       if String.length path > dest_len then
 	Unix.mkdir path 0o700
     | Nodes.NodeNode ("REG", props) ->
@@ -44,7 +44,7 @@ object
       end
     | _ -> ()
 
-  method! leave path chunk node = match node with
+  method! leave path _chunk node = match node with
     | Nodes.NodeNode ("REG", props) ->
       begin match out_descr with
 	| None -> () (* Hard link *)

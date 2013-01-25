@@ -3,7 +3,6 @@
 open Batteries
 
 open OUnit
-open Printf
 open TUtil
 
 let int_chunk i = Chunk.chunk_of_string "blob" (string_of_int i)
@@ -15,7 +14,7 @@ object
 
   val mutable count = 1
 
-  method enter _ _ node = match node with
+  method! enter _ _ node = match node with
     | Nodes.BlobNode data ->
       assert_equal data (int_chunk count)#data;
       count <- count + 1
@@ -36,7 +35,7 @@ let check_count pool count =
   let visitor = new check_visitor in
   Nodes.walk pool "." top visitor
 
-let creation path pool =
+let creation _path pool =
   check_count pool 1;
   check_count pool 2;
   check_count pool 200;

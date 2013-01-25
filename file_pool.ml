@@ -58,7 +58,7 @@ let read_flat_properties filename =
   let decode map line =
     if String.length line > 0 && line.[0] == '#' then map
     else begin
-      match String.Exceptionless.split line "=" with
+      match String.Exceptionless.split line ~by:"=" with
 	  None -> Log.failf "Invalid line in property file: %S" line
 	| Some (key, value) -> StringMap.add key value map
     end in
@@ -152,24 +152,6 @@ let release_lock fd =
   Unix.close fd
 
 (* TODO: Handle newfile. *)
-class type file_pool =
-object
-  method add : Chunk.t -> unit
-  method mem : Hash.t -> bool
-  method find : Hash.t -> Chunk.t
-  method find_option : Hash.t -> Chunk.t option
-
-  method find_full : Hash.t -> ((unit -> Chunk.t) * (unit -> Chunk.info) * string) option
-  method find_index : Hash.t -> int
-
-  method get_backups : Hash.t list
-
-  method flush : unit
-  method close : unit
-  method uuid : string
-end
-
-type t = file_pool
 
 let open_file_pool path =
   Misc.ensure_directory ~what:"pool" path;
@@ -185,10 +167,10 @@ object (self)
 
   method private cur_file = match nodes with
       [] -> raise Not_found
-    | ({ n_file=file } :: _) -> file
+    | ({ n_file=file; _ } :: _) -> file
   method private cur_index = match nodes with
       [] -> raise Not_found
-    | ({ n_index=index } :: _) -> index
+    | ({ n_index=index; _ } :: _) -> index
 
   method private next_name =
     let num = match nodes with
@@ -248,7 +230,7 @@ object (self)
     let rec loop offset nodes =
       match nodes with
 	| [] -> raise Not_found
-	| ({ n_index=index }) :: rest ->
+	| ({ n_index=index; _ }) :: rest ->
 	  begin match index#find_offset hash with
 	    | None -> loop (offset + index#count) rest
 	    | Some pos -> offset + pos
@@ -259,7 +241,7 @@ object (self)
     if dirty then begin
       match nodes with
 	  [] -> ()
-	| ({ n_file=file; n_index=index } :: _) ->
+	| ({ n_file=file; n_index=index; _ } :: _) ->
 	  file#flush;
 	  index#save file#size
     end;

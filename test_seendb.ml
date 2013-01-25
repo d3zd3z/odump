@@ -3,7 +3,6 @@
 open Batteries
 
 open OUnit
-open Printf
 open TUtil
 
 let normalize map = List.of_enum (Seendb.Int64Map.enum map)
@@ -31,10 +30,10 @@ let store cache_name inum nodes =
     Seendb.update cache inum nodes;
     Seendb.commit cache)
 
-let updates path pool =
+let updates path _pool =
   let cache_name = Filename.concat path "tmp.sqlite" in
   let nodes = Enum.map (make_node false) (1 -- 500) in
-  let nodes = Enum.map (fun ({ Seendb.n_inode } as node) -> (n_inode, node)) nodes in
+  let nodes = Enum.map (fun ({ Seendb.n_inode; _ } as node) -> (n_inode, node)) nodes in
   let nodes = Seendb.Int64Map.of_enum nodes in
 
   store cache_name 12345L nodes;
@@ -47,13 +46,13 @@ let updates path pool =
     Seendb.update cache 12345L Seendb.Int64Map.empty);
   check cache_name 12345L nodes
 
-let expire path pool =
+let expire path _pool =
   let cache_name = Filename.concat path "tmp.sqlite" in
   let nodes = Enum.map (fun i -> make_node (i mod 3 = 0) i) (1 -- 500) in
-  let nodes = Enum.map (fun ({ Seendb.n_inode } as node) -> (n_inode, node)) nodes in
+  let nodes = Enum.map (fun ({ Seendb.n_inode; _ } as node) -> (n_inode, node)) nodes in
   let nodes = Seendb.Int64Map.of_enum nodes in
   store cache_name 12345L nodes;
-  let isgood { Seendb.n_expire } = n_expire >= now in
+  let isgood { Seendb.n_expire; _ } = n_expire >= now in
   let nodes = Seendb.Int64Map.filterv isgood nodes in
   check cache_name 12345L nodes
 

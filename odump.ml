@@ -9,7 +9,7 @@ let dump_fmt = "%Y-%m-%d_%H:%M"
 
 let format_date date =
   let nd = Netdate.create ~localzone:true date in
-  Netdate.format dump_fmt nd
+  Netdate.format ~fmt:dump_fmt nd
 
 let show_backup_node hash node = match node with
   | Nodes.BackupNode (date, props) ->
@@ -41,9 +41,9 @@ let list path =
 
 let tree_show path node =
   match node with
-    | Nodes.BackupNode (time, props) ->
+    | Nodes.BackupNode (_time, _props) ->
       printf "back -> %s\n" path;
-    | Nodes.NodeNode (kind, props) ->
+    | Nodes.NodeNode (kind, _props) ->
       if kind == "DIR" then
 	printf "Enter %04s %s\n" kind path
       else
@@ -337,7 +337,7 @@ let usage () =
   let names = Maps.StringMap.enum commands in
   Format.fprintf fmt "usage: odump <command> [<args>]@\n@\n";
   Format.fprintf fmt "commands: @[";
-  Enum.iter (fun (name, {help}) -> Format.fprintf fmt "%-12s %s@\n" name help) names;
+  Enum.iter (fun (name, {help; _}) -> Format.fprintf fmt "%-12s %s@\n" name help) names;
   Format.fprintf fmt "@]@\n";
   Format.fprintf fmt "Use 'odump command --help' for more information on a specific command.@\n@\n";
   Format.fprintf fmt "Global options:";
@@ -350,7 +350,7 @@ let main () =
      This parses the arguments up until the command name. *)
   let global_usage = usage () in
   let global_args = [ pool_arg; verify_arg; config_file_arg ] in
-  begin try Arg.parse global_args (fun arg -> raise Got_command) global_usage;
+  begin try Arg.parse global_args (fun _arg -> raise Got_command) global_usage;
 	    Arg.usage global_args global_usage;
 	    exit 1
     with Got_command -> ()

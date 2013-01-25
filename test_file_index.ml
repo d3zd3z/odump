@@ -1,10 +1,9 @@
 (* Testing the file index. *)
 
 open Batteries
-open LegacyIO
+(* open LegacyIO *)
 
 open OUnit
-open Printf
 open TUtil
 
 open Enum.Infix
@@ -14,6 +13,7 @@ module HashSet = Set.Make(Hash)
 
 let numbered_hash n = Hash.of_data [string_of_int n]
 
+(*
 (* Check that the given hash is present (and correct), and that the
    off-by-one hashes are not present. *)
 let check_hash map hash pos =
@@ -28,6 +28,7 @@ let memory () =
   let table = HashMap.of_enum (Enum.combine (hashes, dests)) in
   Enum.iter (fun (pos, hash) -> check_hash table hash pos)
     (Enum.combine (src, hashes))
+*)
 
 let check_hash idx hash pos kind =
   assert_equal (pos, kind) (idx#find hash);

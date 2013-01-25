@@ -25,3 +25,6 @@
 
 <config-file-1.0>: include
 <uuidm-0.9.4>: include
+
+# Warn about (nearly) everything
+<*.ml> or <*.mli>: warn(+A-4)

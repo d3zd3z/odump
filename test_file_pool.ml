@@ -1,8 +1,7 @@
 open Batteries
-open LegacyIO
+(* open LegacyIO *)
 
 open OUnit
-open Printf
 open TUtil
 
 (* TODO: Test newfile mode *)

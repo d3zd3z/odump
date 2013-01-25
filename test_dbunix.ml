@@ -1,6 +1,5 @@
 open Batteries
 open OUnit
-open Printf
 
 module SM = Maps.StringMap
 
@@ -23,7 +22,7 @@ let lstat () =
   assert_equal (int_of_string (SM.find "size" map)) real_stat.Unix.st_size;
 
   (* Test one time field. *)
-  let (ns, sec) = modf (float_of_string (SM.find "ctime" map)) in
+  let (_ns, sec) = modf (float_of_string (SM.find "ctime" map)) in
   assert_equal sec real_stat.Unix.st_ctime
   (* printf "\nkind: %s\n" kind;
   SM.iter (fun key value -> printf "%-8s %s\n" key value) map *)

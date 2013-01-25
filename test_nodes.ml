@@ -3,7 +3,6 @@
 open Batteries
 
 open OUnit
-open Printf
 open TUtil
 
 module SM = Maps.StringMap
@@ -55,7 +54,7 @@ let normalize_node = function
   | Nodes.DirNode map -> Nodes.DirNode (normalize_map map)
   | n -> n
 
-let roundtrip path pool =
+let roundtrip _path pool =
   let base = sample_nodes () in
   let hashes = List.map (Nodes.put pool) base in
   let read_back = List.map (Nodes.get pool) hashes in

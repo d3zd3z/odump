@@ -73,7 +73,7 @@ let mingled_logger level message =
   if Netlog.level_weight level <= Netlog.level_weight !log_level then
     with_output (fun () ->
       let now = Unix.gettimeofday () in
-      let nice_time = Netdate.format "%Y-%m-%d-%H:%M:%.3S" (Netdate.create ~localzone:true now) in
+      let nice_time = Netdate.format ~fmt:"%Y-%m-%d-%H:%M:%.3S" (Netdate.create ~localzone:true now) in
       Printf.fprintf stderr "%s [%-5s]\n    %s\n%!" nice_time (Netlog.string_of_level level) message)
 
 (* Register a formater that intermingles correctly with the progress

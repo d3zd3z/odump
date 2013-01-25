@@ -226,7 +226,7 @@ class loaded_index path file_size : simple_index =
 
   let get_kind index = IntMap.find (Char.code kinds.[index]) kind_map in
 
-object (self)
+object
   method find hash = match search hash with
       None -> None
     | Some pos -> Some (offsets.(pos), get_kind pos)

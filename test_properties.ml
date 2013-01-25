@@ -1,8 +1,6 @@
 open Batteries
 
 open OUnit
-open Printf
-open TUtil
 
 let sample1 = "\
 <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n\

@@ -1,7 +1,6 @@
 (* Interface to a storage database. *)
 
 open Batteries
-open Printf
 
 module Data = Sqlite3.Data
 
@@ -41,7 +40,7 @@ let sqln db text args =
 
 (* Run a query, expecting no results. *)
 let sql0 db text args =
-  sql_fold db (fun _ x -> Log.failf "not expecing SQL rows: %S" text) () text args
+  sql_fold db (fun _ _ -> Log.failf "not expecing SQL rows: %S" text) () text args
 
 (* Run a query, expecting a single result. *)
 let sql1 db text args =

@@ -151,7 +151,7 @@ let walk ?(aux_meter = Log.null_meter) (pool : #Pool.readable) path hash (visito
 	try
 	  visitor#enter path chunk node;
 	  begin match node with
-	    | BackupNode (time, props) ->
+	    | BackupNode (_time, props) ->
 	      descend path (get_prop_hash "hash" props)
 	    | NodeNode (kind, props) when kind = "DIR" ->
 	      descend path (get_prop_hash "children" props)
@@ -162,7 +162,7 @@ let walk ?(aux_meter = Log.null_meter) (pool : #Pool.readable) path hash (visito
 		let child_path = Filename.concat path name in
 		descend child_path hash in
 	      StringMap.iter each children
-	    | IndirectNode (_, level, subs) ->
+	    | IndirectNode (_kind, _level, subs) ->
 	      Array.iter (descend path) subs
 	    | _ -> ()
 	  end

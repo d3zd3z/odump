@@ -1,7 +1,6 @@
 open Batteries
 open LegacyIO
 open OUnit
-open Printf
 open TUtil
 
 let compression () =

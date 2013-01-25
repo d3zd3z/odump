@@ -1,7 +1,6 @@
 (* Test utilities. *)
 
 open Batteries
-open LegacyIO
 
 (* Similar to base64, but filename safe *)
 let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
@@ -13,7 +12,7 @@ let rnd = Random.State.make
 let random_name base =
   let buf = Buffer.create (String.length base + 16) in
   Buffer.add_string buf base;
-  for i = 0 to 15 do
+  for _i = 0 to 15 do
     Buffer.add_char buf chars.[Random.State.int rnd 64]
   done;
   Buffer.contents buf

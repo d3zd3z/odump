@@ -13,7 +13,7 @@ let clean_name name =
 
 (* Wrap a storage pool in a tracker that monitors a progress meter. *)
 class write_track_pool (inner : #Pool.writable) =
-object (self)
+object
   val start_time = Unix.gettimeofday ()
 
   val mutable count = 0L
@@ -76,7 +76,7 @@ let block_size = 256 * 1024
 
 let decode_atts atts =
   let each att =
-    try String.split att "=" with
+    try String.split att ~by:"=" with
       | Not_found -> Log.failf "attribute has no '=': %S" att in
   StringMap.of_enum (Enum.map each (List.enum atts))
 
@@ -123,7 +123,7 @@ end = struct
       next = Seendb.Int64Map.empty;
       add_skip = add_skip }
 
-  let check' c kind child_stat get_op =
+  let check' c _kind child_stat get_op =
     let cino = Dbunix.get_int64 "ino" child_stat in
     match Seendb.Int64Map.Exceptionless.find cino c.prior with
       | None -> get_op ()
@@ -184,7 +184,7 @@ let save' pool cache backup_path atts =
       in
       (Nodes.try_put pool (Nodes.NodeNode (kind, props)), props))
 
-  and get_dir path kind dir_props =
+  and get_dir path _kind dir_props =
     let dircache = Cache.get cache dir_props pool#add_skip in
 
     let children = Dbunix.dir_with_stats path in
@@ -193,7 +193,7 @@ let save' pool cache backup_path atts =
     let buf = Indirect.Dir.make pool block_size in
 
     List.iter (fun (name, (child_kind, child_props)) ->
-      let (hash, child_props) = Cache.check dircache child_kind child_props
+      let (hash, _child_props) = Cache.check dircache child_kind child_props
 	(fun () ->
 	  let path = Filename.concat path name in
 	  walk path child_kind child_props) in

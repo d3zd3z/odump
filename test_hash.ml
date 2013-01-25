@@ -1,5 +1,5 @@
 open Batteries
-open LegacyIO
+(* open LegacyIO *)
 open OUnit
 
 let basic () =

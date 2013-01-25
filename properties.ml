@@ -45,11 +45,13 @@ let sun_properties_dtd = "\
 <!ATTLIST entry key CDATA #REQUIRED>\n\
 "
 
+(*
 let jpool_dtd = "\
 <!ELEMENT node ( entry* ) >\n\
 <!ATTLIST node kind CDATA #REQUIRED>\n\
 <!ELEMENT entry (#PCDATA)>\n\
 <!ATTLIST entry key CDATA #REQUIRED>\n"
+*)
 
 let config = Pxp_types.default_config
 let spec = Pxp_tree_parser.default_spec

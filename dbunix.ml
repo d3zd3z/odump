@@ -60,7 +60,7 @@ let get_hash key map = Hash.of_string (SM.find key map)
    integer, or a fractional time with a single decimal point.  Returns
    the seconds a nsec values of the time. *)
 let decode_time time =
-  match String.nsplit time "." with
+  match String.nsplit time ~by:"." with
     | [sec] -> (Int64.of_string sec, 0L)
     | [sec; nsec] ->
       let len = String.length nsec in
@@ -128,7 +128,7 @@ let mountpoint_of path =
   let parts = chop_path rpath in
   let rec loop parts = match parts with
     | [(root, _)] -> root
-    | ((a, astat) :: (((b, bstat) :: _) as rest)) ->
+    | ((a, astat) :: (((_b, bstat) :: _) as rest)) ->
       if astat.Unix.st_dev = bstat.Unix.st_dev then
 	loop rest
       else a
