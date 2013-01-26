@@ -159,11 +159,6 @@ let pool_clone src_path dest_path hashes =
     File_pool.with_file_pool dest_path (fun dest_pool ->
       Clone.clone_trees src_pool dest_pool hashes))
 
-let dump pool_path backup_path atts =
-  File_pool.with_file_pool pool_path (fun pool ->
-    let cache = Mountpoint.make_cache_path pool_path backup_path in
-    Backup.save pool cache backup_path atts)
-
 (** {4 Argument processing} *)
 
 type command = {
@@ -213,7 +208,7 @@ let command_restore usage = function
   | _ -> usage ()
 
 let command_dump usage = function
-  | (root :: att1 :: atts) -> dump (must_pool usage) root (att1::atts)
+  | (root :: att1 :: atts) -> Backup.dump (must_pool usage) root (att1::atts)
   | _ -> usage ()
 
 let command_create_pool usage = function
