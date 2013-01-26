@@ -12,14 +12,14 @@ let fail message =
   exit 1
 
 let failf fmt =
-  Printf.ksprintf fail fmt
+  Printf.ksprintf2 fail fmt
 
 let info msg = log `Info msg
-let infof fmt = Printf.ksprintf info fmt
+let infof fmt = Printf.ksprintf2 info fmt
 let warn msg = log `Warning msg
-let warnf fmt = Printf.ksprintf warn fmt
+let warnf fmt = Printf.ksprintf2 warn fmt
 let debug msg = log `Debug msg
-let debugf fmt = Printf.ksprintf debug fmt
+let debugf fmt = Printf.ksprintf2 debug fmt
 
 let has_console = Unix.isatty Unix.stderr
 

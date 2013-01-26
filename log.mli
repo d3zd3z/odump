@@ -7,15 +7,15 @@ val logf : Netlog.level -> ('a, unit, string, unit) format4 -> 'a
 
 (* Log failure, and then exit. *)
 val fail : string -> 'a
-val failf : ('a, unit, string, 'b) format4 -> 'a
+val failf : ('a, 'b BatInnerIO.output, unit, 'b) format4 -> 'a
 
 (* Wrappers for the various levels. *)
 val info : string -> unit
-val infof : ('a, unit, string, unit) format4 -> 'a
+val infof : ('a, 'b BatInnerIO.output, unit, unit) format4 -> 'a
 val warn : string -> unit
-val warnf : ('a, unit, string, unit) format4 -> 'a
+val warnf : ('a, 'b BatInnerIO.output, unit, unit) format4 -> 'a
 val debug : string -> unit
-val debugf : ('a, unit, string, unit) format4 -> 'a
+val debugf : ('a, 'b BatInnerIO.output, unit, unit) format4 -> 'a
 
 val message : string -> unit
 val with_output : (unit -> unit) -> unit
