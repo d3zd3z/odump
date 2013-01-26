@@ -239,6 +239,10 @@ let command_verify usage = function
   | (file :: files) -> Verify.verify (file :: files)
   | _ -> usage ()
 
+let command_managed usage = function
+  | [host] -> Managed.managed (must_pool usage) host
+  | _ -> usage ()
+
 let remote_commands = Maps.StringMap.of_enum (List.enum [
   "ping", { help = "Test a remote connection";
 	    usage = "odump remote -client name ping";
@@ -324,6 +328,10 @@ let commands = Maps.StringMap.of_enum (List.enum [
               usage = "verify file1.dat file2.dat ...";
               args = [ ];
               action = command_verify };
+  "managed", { help = "Perform a managed backup";
+	       usage = "managed host";
+	       args = [];
+	       action = command_managed };
 ])
 
 let usage () =

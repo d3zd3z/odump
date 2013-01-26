@@ -34,6 +34,7 @@
    - [ ] manual prune of expired cache entries
    - [ ] flush pool and index files on write
    - [ ] Use uuid of fs on non-btrfs filesystems
+   - [X] Implement manager
 
 ** Tasks to extend functionality
 
@@ -45,9 +46,12 @@
    - [ ] read-only open of pool, with read locking
    - [X] config file, to set default pool
    - [ ] Show latest path in tree traversals
+   - [ ] Save/restore xattrs
 
 ** Misc things (cleanups etc)
 
+   - [ ] File bug report with ocamlnet about append not working.
+   - [ ] make-cache writes to incorrect named database file.
    - [ ] Build source as library and two executables that use it.
    - [X] Properly close/cleanup pools
    - [ ] Allow #enter on traveral to abort the traversal (maybe there
