@@ -87,16 +87,19 @@ let fs_list_wrappers = Config_file.list_wrappers filesystem_wrappers
 type host = {
   host_vol: string;
   host_host: string;
-  host_mirror: string;
+  host_mirror: string option;
   host_fs: filesystem list }
 
 let host_wrappers =
   let must name field = must "host" name field in
   let to_raw = fun host ->
-    C.Raw.Section [ "vol", C.string_wrappers.C.to_raw host.host_vol;
-		    "host", C.string_wrappers.C.to_raw host.host_host;
-		    "mirror", C.string_wrappers.C.to_raw host.host_mirror;
-		    "fs", fs_list_wrappers.C.to_raw host.host_fs ] in
+    let mirror = match host.host_mirror with
+      | None -> []
+      | Some m -> [ "mirror", C.string_wrappers.C.to_raw m ] in
+    C.Raw.Section
+      ([ "vol", C.string_wrappers.C.to_raw host.host_vol;
+	 "host", C.string_wrappers.C.to_raw host.host_host ] @ mirror @
+	  [ "fs", fs_list_wrappers.C.to_raw host.host_fs ]) in
   let of_raw = function
     | C.Raw.Section l ->
       let vol = ref None and host = ref None and mirror = ref None and fs = ref None in
@@ -112,7 +115,7 @@ let host_wrappers =
 	l;
       { host_vol = must "vol" !vol;
 	host_host = must "host" !host;
-	host_mirror = must "mirror" !mirror;
+	host_mirror = !mirror;
 	host_fs = must "fs" !fs }
     | r -> raise (C.Wrong_type (fun outchan -> Legacy.Printf.fprintf outchan
       "Raw.Section expected, got %a\n%!" C.Raw.to_channel r))
@@ -122,7 +125,7 @@ let host_wrappers =
 
 let sample_host = { host_vol = "volume";
 		    host_host = "hostname";
-		    host_mirror = "/mnt/mirrors/hostname";
+		    host_mirror = Some "/mnt/mirrors/hostname";
 		    host_fs = [ { fs_volume = "boot";
 				  fs_base = "/boot";
 				  fs_clean = "/boot/clean.sh";

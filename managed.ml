@@ -28,7 +28,7 @@ object (self)
   val reg_dest = fs.C.fs_base
 
   (* TODO: Make the mirror optional. *)
-  val mirror = host.C.host_mirror ^ "/" ^ fs.C.fs_volume
+  val mirror = Option.map (fun m -> m ^ "/" ^ fs.C.fs_volume) host.C.host_mirror
 
   val pool = pool
 
@@ -40,8 +40,10 @@ object (self)
   method setup_check_paths =
     if not (Sys.is_directory reg_dest) then
       failwith (sprintf "Backup base directory doesn't exist '%s'" reg_dest);
-    if not (Sys.is_directory mirror) then
-      failwith (sprintf "Mirror dir '%s' doesn't exist" mirror);
+    Option.may (fun mirror ->
+      if not (Sys.is_directory mirror) then
+	failwith (sprintf "Mirror dir '%s' doesn't exist" mirror))
+      mirror;
     if not (Sys.is_directory pool) then
       failwith (sprintf "Pool dir doesn't exist: '%s'" pool)
 
@@ -68,9 +70,11 @@ object (self)
   method teardown_sure_write = ()
 
   method setup_rsync =
-    self#banner rsynclog "rsync" self#sure_path;
-    self#run ~log:rsynclog (command "rsync") ["-aiH"; "--delete";
-					      self#sure_path ^ "/"; mirror]
+    Option.may (fun mirror ->
+      self#banner rsynclog "rsync" self#sure_path;
+      self#run ~log:rsynclog (command "rsync") ["-aiH"; "--delete";
+						self#sure_path ^ "/"; mirror])
+      mirror
 
   method teardown_rsync = ()
 

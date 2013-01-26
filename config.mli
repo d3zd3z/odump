@@ -24,7 +24,7 @@ type filesystem = {
 type host = {
   host_vol: string;
   host_host: string;
-  host_mirror: string;
+  host_mirror: string option;
   host_fs: filesystem list }
 
 val hosts : host list Config_file.cp
