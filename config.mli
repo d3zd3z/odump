@@ -16,13 +16,13 @@ val bogus_client : client
 
 (* Backup host definition. *)
 type filesystem = {
+  fs_vg: string option;
   fs_volume: string;
   fs_base: string;
   fs_clean: string;
   fs_style: string }
 
 type host = {
-  host_vol: string;
   host_host: string;
   host_mirror: string option;
   host_fs: filesystem list }

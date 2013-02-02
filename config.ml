@@ -47,6 +47,7 @@ let must section name = function
 
 (* Information about a single filesystem. *)
 type filesystem = {
+  fs_vg: string option;
   fs_volume: string;
   fs_base: string;
   fs_clean: string;
@@ -55,15 +56,22 @@ type filesystem = {
 let filesystem_wrappers =
   let must name field = must "filesystem" name field in
   let to_raw = fun fs ->
-    C.Raw.Section [ "volume", C.string_wrappers.C.to_raw fs.fs_volume;
-		    "base", C.string_wrappers.C.to_raw fs.fs_base;
-		    "clean", C.string_wrappers.C.to_raw fs.fs_clean;
-		    "style", C.string_wrappers.C.to_raw fs.fs_style ] in
+    let vg = match fs.fs_vg with
+      | None -> []
+      | Some v -> [ "vg", C.string_wrappers.C.to_raw v ] in
+    C.Raw.Section
+      (vg @
+	 [ "volume", C.string_wrappers.C.to_raw fs.fs_volume;
+	   "base", C.string_wrappers.C.to_raw fs.fs_base;
+	   "clean", C.string_wrappers.C.to_raw fs.fs_clean;
+	   "style", C.string_wrappers.C.to_raw fs.fs_style ]) in
   let of_raw = function
     | C.Raw.Section l ->
-      let volume = ref None and base = ref None and clean = ref None and style = ref None in
+      let volume = ref None and base = ref None and clean = ref None and style = ref None
+      and vg = ref None in
       List.iter
 	(fun (field_name, value) -> match field_name with
+	  | "vg" -> vg := Some (C.string_wrappers.C.of_raw value)
 	  | "volume" -> volume := Some (C.string_wrappers.C.of_raw value)
 	  | "base" -> base := Some (C.string_wrappers.C.of_raw value)
 	  | "clean" -> clean := Some (C.string_wrappers.C.of_raw value)
@@ -72,7 +80,8 @@ let filesystem_wrappers =
 	    Printf.eprintf "Unexpected field in filesystem '%s'\n" s;
 	    exit 1)
 	l;
-      { fs_volume = must "volume" !volume;
+      { fs_vg = !vg;
+	fs_volume = must "volume" !volume;
 	fs_base = must "base" !base;
 	fs_clean = must "clean" !clean;
 	fs_style = must "style" !style }
@@ -85,7 +94,6 @@ let filesystem_wrappers =
 let fs_list_wrappers = Config_file.list_wrappers filesystem_wrappers
 
 type host = {
-  host_vol: string;
   host_host: string;
   host_mirror: string option;
   host_fs: filesystem list }
@@ -97,15 +105,13 @@ let host_wrappers =
       | None -> []
       | Some m -> [ "mirror", C.string_wrappers.C.to_raw m ] in
     C.Raw.Section
-      ([ "vol", C.string_wrappers.C.to_raw host.host_vol;
-	 "host", C.string_wrappers.C.to_raw host.host_host ] @ mirror @
+      ([ "host", C.string_wrappers.C.to_raw host.host_host ] @ mirror @
 	  [ "fs", fs_list_wrappers.C.to_raw host.host_fs ]) in
   let of_raw = function
     | C.Raw.Section l ->
-      let vol = ref None and host = ref None and mirror = ref None and fs = ref None in
+      let host = ref None and mirror = ref None and fs = ref None in
       List.iter
 	(fun (field_name, value) -> match field_name with
-	  | "vol" -> vol := Some (C.string_wrappers.C.of_raw value)
 	  | "host" -> host := Some (C.string_wrappers.C.of_raw value)
 	  | "mirror" -> mirror := Some (C.string_wrappers.C.of_raw value)
 	  | "fs" -> fs := Some (fs_list_wrappers.C.of_raw value)
@@ -113,8 +119,7 @@ let host_wrappers =
 	    Printf.eprintf "Unexpected field in filesystem '%s'\n" s;
 	    exit 1)
 	l;
-      { host_vol = must "vol" !vol;
-	host_host = must "host" !host;
+      { host_host = must "host" !host;
 	host_mirror = !mirror;
 	host_fs = must "fs" !fs }
     | r -> raise (C.Wrong_type (fun outchan -> Legacy.Printf.fprintf outchan
@@ -123,14 +128,15 @@ let host_wrappers =
   { C.to_raw = to_raw;
     C.of_raw = of_raw }
 
-let sample_host = { host_vol = "volume";
-		    host_host = "hostname";
+let sample_host = { host_host = "hostname";
 		    host_mirror = Some "/mnt/mirrors/hostname";
-		    host_fs = [ { fs_volume = "boot";
+		    host_fs = [ { fs_vg = None;
+				  fs_volume = "boot";
 				  fs_base = "/boot";
 				  fs_clean = "/boot/clean.sh";
 				  fs_style = "plain" };
-				{ fs_volume = "root";
+				{ fs_vg = Some "vg";
+				  fs_volume = "root";
 				  fs_base = "/";
 				  fs_clean = "/path/to/clean-root.sh";
 				  fs_style = "ext4-lvm" } ] }

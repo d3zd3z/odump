@@ -117,11 +117,14 @@ object (self)
 end
 
 class lvm_manager pool host fs is_xfs =
+  let vg_name = match fs.C.fs_vg with
+    | Some v -> v
+    | None -> failwith (sprintf "lvm fs needs 'vg' field: '%s'" fs.C.fs_volume) in
 object (self)
   inherit fs_manager pool host fs as super
 
   val snap_dest = "/mnt/snap/" ^ fs.C.fs_volume
-  val snap_vol = "/dev/" ^ host.C.host_vol ^ "/" ^ fs.C.fs_volume ^ ".snap"
+  val snap_vol = "/dev/" ^ vg_name ^ "/" ^ fs.C.fs_volume ^ ".snap"
 
   method! sure_path = snap_dest
 
@@ -132,7 +135,7 @@ object (self)
 
   method! setup_start_snapshot =
     self#run (command "lvcreate") ["-L"; "5g"; "-n"; fs.C.fs_volume ^ ".snap";
-				   "-s"; "/dev/" ^ host.C.host_vol ^ "/" ^ fs.C.fs_volume]
+				   "-s"; "/dev/" ^ vg_name ^ "/" ^ fs.C.fs_volume]
 
   method! teardown_start_snapshot =
     self#run (command "lvremove") ["-f"; snap_vol]

@@ -47,11 +47,13 @@
    - [X] config file, to set default pool
    - [ ] Show latest path in tree traversals
    - [ ] Save/restore xattrs
+   - [X] Move lvm volume down into fs so it can differ per volume
 
 ** Misc things (cleanups etc)
 
    - [ ] File bug report with ocamlnet about append not working.
-   - [ ] make-cache writes to incorrect named database file.
+   - [ ] make-cache writes to incorrect named database file, when
+     snapshots are used.
    - [ ] Build source as library and two executables that use it.
    - [X] Properly close/cleanup pools
    - [ ] Allow #enter on traveral to abort the traversal (maybe there
