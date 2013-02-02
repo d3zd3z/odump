@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <attr/xattr.h>
 
 CAMLprim value db_readdir(value vd)
 {
@@ -191,4 +192,45 @@ CAMLprim value db_realpath(value path)
 	value tmp = copy_string(result);
 	free(result);
 	return tmp;
+}
+
+CAMLprim value db_llistxattr(value path)
+{
+	CAMLparam1(path);
+	CAMLlocal3(head, tail, tmp);
+	char buf[1024];
+	char *ptr;
+	ssize_t result = llistxattr(String_val(path), buf, sizeof(buf));
+	if (result < 0)
+		uerror("llistxattr", path);
+	head = Val_emptylist;
+	tail = Val_emptylist;
+	for (ptr = buf; ptr - buf < result; ptr += strlen(ptr) + 1) {
+		tmp = caml_alloc(2, 0);
+		Store_field(tmp, 0, copy_string(ptr));
+		Store_field(tmp, 1, Val_emptylist);
+		if (head == Val_emptylist) {
+			head = tmp;
+			tail = tmp;
+		} else {
+			Store_field(tail, 1, tmp);
+			tail = tmp;
+		}
+	}
+	CAMLreturn(head);
+}
+
+CAMLprim value db_lgetxattr(value path, value name)
+{
+	CAMLparam2(path, name);
+	CAMLlocal1(buf);
+	ssize_t result = lgetxattr(String_val(path), String_val(name), NULL, 0);
+	if (result < 0)
+		uerror("lgetxattr", path);
+	buf = alloc_string(result);
+	ssize_t r2 = lgetxattr(String_val(path), String_val(name),
+			       String_val(buf), result);
+	if (r2 != result)
+		uerror("lgetxattr", path);
+	CAMLreturn(buf);
 }

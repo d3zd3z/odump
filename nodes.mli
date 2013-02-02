@@ -13,6 +13,7 @@ type node =
   | IndirectNode of indirect_kind * int * Hash.t array
   | NullNode
   | BlobNode of string
+  | XattrNode of string Maps.StringMap.t
 
 val get : #Pool.readable -> Hash.t -> node
 

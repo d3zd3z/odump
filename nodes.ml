@@ -15,6 +15,7 @@ type node =
   | IndirectNode of indirect_kind * int * Hash.t array
   | NullNode
   | BlobNode of string
+  | XattrNode of string Maps.StringMap.t
 
 let extract_dir data =
   let len = String.length data in
@@ -43,6 +44,20 @@ let decode_indirect kind ind chunk =
   let level = Char.code kind.[3] - Char.code '0' in
   IndirectNode (ind, level, extract_indirect chunk#data)
 
+let extract_xattr data =
+  let len = String.length data in
+  let rec loop map pos =
+    if pos = len then map else begin
+      let klen = Char.code data.[pos] in
+      let key = String.sub data (pos+1) klen in
+      let pos = pos + 1 + klen in
+      let vlen = Binary.get16be data pos in
+      let value = String.sub data (pos+2) vlen in
+      let pos = pos + 2 + vlen in
+      loop (StringMap.add key value map) pos
+    end in
+  loop StringMap.empty 0
+
 let decode_node chunk =
   match chunk#kind with
     | "back" ->
@@ -64,6 +79,7 @@ let decode_node chunk =
 
     | "null" -> NullNode
     | "blob" -> BlobNode (chunk#data)
+    | "xatr" -> XattrNode (extract_xattr chunk#data)
     | kind ->
       Pdump.pdump chunk#data;
       Log.failf "Unknown node kind: %S" kind
@@ -202,6 +218,19 @@ let encode_indirect prefix level children =
   Array.iter each children;
   Chunk.chunk_of_string kind (Buffer.contents buf)
 
+(* Encode the xattr mapping.  For now assume that all xattrs fit in a
+   single blob.  Most filesystems on Linux allow much less xattr data
+   than that. *)
+let encode_xattr_node data =
+  let buf = Buffer.create 128 in
+  let each key value =
+    Buffer.add_char buf (Char.chr (String.length key));
+    Buffer.add_string buf key;
+    Binary.buffer_add_16be buf (String.length value);
+    Buffer.add_string buf value in
+  StringMap.iter each data;
+  Chunk.chunk_of_string "xatr" (Buffer.contents buf)
+
 (* Writing nodes. *)
 let rec encode_node node = match node with
   | BlobNode data when String.length data = 0 -> encode_node NullNode
@@ -210,6 +239,7 @@ let rec encode_node node = match node with
   | DirNode children -> encode_dir children
   | NullNode -> Chunk.chunk_of_string "null" ""
   | NodeNode (kind, props) -> encode_node_node "node" kind props
+  | XattrNode data -> encode_xattr_node data
   | IndirectNode (Dir_Indirect, level, children) -> encode_indirect "dir" level children
   | IndirectNode (Data_Indirect, level, children) -> encode_indirect "ind" level children
   | BackupNode (date, props) ->

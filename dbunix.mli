@@ -37,3 +37,6 @@ val realpath : string -> string
 
 val mountpoint_of : string -> string
 (** Determine the mountpoint associated with this path. *)
+
+val llistxattr : string -> string list
+val lgetxattr : string -> string -> string

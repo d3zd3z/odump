@@ -72,7 +72,7 @@ object (self)
   method setup_rsync =
     Option.may (fun mirror ->
       self#banner rsynclog "rsync" self#sure_path;
-      self#run ~log:rsynclog (command "rsync") ["-aiH"; "--delete";
+      self#run ~log:rsynclog (command "rsync") ["-aiHX"; "--delete";
 						self#sure_path ^ "/"; mirror])
       mirror
 

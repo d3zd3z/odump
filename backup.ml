@@ -159,6 +159,19 @@ let store_file pool path =
   with_dispose ~dispose:Unix.close read (Dbunix.open_for_read path);
   Indirect.finish ind
 
+let is_safe_xattr name = not (String.starts_with name "system.")
+
+let scan_xattrs pool path =
+  match List.filter is_safe_xattr (Dbunix.llistxattr path) with
+    | [] -> None
+    | atts ->
+      let map = ref StringMap.empty in
+      List.iter (fun name ->
+	let attr = Dbunix.lgetxattr path name in
+	map := StringMap.add name attr !map)
+	atts;
+      Some (Nodes.try_put pool (Nodes.XattrNode !map))
+
 let save' pool cache backup_path atts =
   let pool = new write_track_pool pool in
   let now = Unix.gettimeofday () in
@@ -174,7 +187,11 @@ let save' pool cache backup_path atts =
 
 	| "REG" ->
 	    let hash = store_file pool path in
-	    StringMap.add "data" (Hash.to_string hash) props
+	    let p2 = StringMap.add "data" (Hash.to_string hash) props in
+	    begin match scan_xattrs pool path with
+	      | Some h -> StringMap.add "xattr" (Hash.to_string h) p2
+	      | None -> p2
+	    end
 
 	| "LNK" ->
 	    let target = Unix.readlink path in

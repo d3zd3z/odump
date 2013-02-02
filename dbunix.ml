@@ -135,3 +135,6 @@ let mountpoint_of path =
     | [] -> Log.failf "Empty path: path=%S, rpath=%S" path rpath in
   let stats = List.map Unix.lstat parts in
   loop (List.combine parts stats)
+
+external llistxattr : string -> string list = "db_llistxattr"
+external lgetxattr : string -> string -> string = "db_lgetxattr"
