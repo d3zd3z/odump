@@ -103,7 +103,7 @@ object (self)
     close ()
 
   method banner fname task dest =
-    let now = Sys.time () in
+    let now = Unix.time () in
     let nd = Netdate.create ~localzone:true now in
     let now_fmt = Netdate.format ~fmt:"%Y-%m-%d_%H:%M" nd in
     let line = sprintf "--- %s of %s (%s) on %s ---\n" task fs.C.fs_volume dest now_fmt in

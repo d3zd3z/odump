@@ -51,6 +51,8 @@
 
 ** Misc things (cleanups etc)
 
+   - [X] Fix date with sure-log printing.  It seems to be printing the
+     banner using the epoch.
    - [ ] File bug report with ocamlnet about append not working.
    - [ ] make-cache writes to incorrect named database file, when
      snapshots are used.
