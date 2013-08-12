@@ -100,21 +100,20 @@ let index_recovery tmpdir =
   ()
 
 let newfile_check tmpdir =
-  (* do_cleanup := false; *)
+  do_cleanup := false;
   let pfile n = Filename.concat tmpdir (Printf.sprintf "pool-data-%04d.data" n) in
   let monitor = pool_monitor tmpdir in
   monitor#create ~newfile:true ();
   monitor#openit;
-  monitor#add (1 -- 1);
+  monitor#add (1 -- 1000);
   monitor#close;
 
   assert_bool "file 0" (Sys.file_exists (pfile 0));
   assert_bool "file 1" (not (Sys.file_exists (pfile 1)));
 
-  (* Re-open, and make sure that creates a new file. *)
+  (* Re-open, and make sure that creates a new file, and not more. *)
   monitor#openit;
-  monitor#add (2 -- 2);
-  monitor#add (3 -- 3);
+  monitor#add (1001 -- 2000);
   monitor#close;
 
   assert_bool "file 0" (Sys.file_exists (pfile 0));

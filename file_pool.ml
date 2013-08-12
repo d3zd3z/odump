@@ -177,12 +177,10 @@ object (self)
       | (node::_) -> 1 + get_number node.n_path in
     make_pool_name path num
 
-  (* Is there room for [chunk] in the current pool file?  Returns false when
-   * there are no files yet created, or newfile is requesting a fresh file for
-   * the first write. *)
-  method private room chunk =
-    (not props.p_newfile || first_write) &&
-      nodes <> [] && self#cur_file#size + chunk#write_size <= props.p_limit
+  (* Should we make a new pool file? *)
+  method private need_new chunk =
+    (props.p_newfile && first_write) ||
+      nodes == [] || self#cur_file#size + chunk#write_size > props.p_limit
 
   method private make_new_pool_file =
     self#flush;
@@ -193,7 +191,7 @@ object (self)
 
   method add chunk =
     if not (self#mem chunk#hash) then begin
-      if not (self#room chunk) then self#make_new_pool_file;
+      if self#need_new chunk then self#make_new_pool_file;
       let file = self#cur_file in
       let index = self#cur_index in
       let pos = file#append chunk in
