@@ -100,7 +100,7 @@ let index_recovery tmpdir =
   ()
 
 let newfile_check tmpdir =
-  do_cleanup := false;
+  (* do_cleanup := false; *)
   let pfile n = Filename.concat tmpdir (Printf.sprintf "pool-data-%04d.data" n) in
   let monitor = pool_monitor tmpdir in
   monitor#create ~newfile:true ();
