@@ -151,8 +151,6 @@ let release_lock fd =
   Unix.lockf fd Unix.F_ULOCK 0;
   Unix.close fd
 
-(* TODO: Handle newfile. *)
-
 let open_file_pool path =
   Misc.ensure_directory ~what:"pool" path;
   let metadata = Filename.concat path "metadata" in
@@ -164,6 +162,7 @@ object (self)
   val mutable props = decode_backup_properties @@ read_flat_properties props_name
   val mutable nodes = find_backup_nodes path
   val mutable dirty = false
+  val mutable first_write = true
 
   method private cur_file = match nodes with
       [] -> raise Not_found
@@ -178,9 +177,12 @@ object (self)
       | (node::_) -> 1 + get_number node.n_path in
     make_pool_name path num
 
-  (* Is there room for [chunk] in the current pool file? *)
+  (* Is there room for [chunk] in the current pool file?  Returns false when
+   * there are no files yet created, or newfile is requesting a fresh file for
+   * the first write. *)
   method private room chunk =
-    nodes <> [] && self#cur_file#size + chunk#write_size <= props.p_limit
+    (not props.p_newfile || first_write) &&
+      nodes <> [] && self#cur_file#size + chunk#write_size <= props.p_limit
 
   method private make_new_pool_file =
     self#flush;
@@ -198,7 +200,8 @@ object (self)
       index#add chunk#hash pos chunk#kind;
       if chunk#kind = "back" then
 	append_backup (Filename.concat metadata "backups.txt") chunk#hash;
-      dirty <- true
+      dirty <- true;
+      first_write <- false
     end
 
   method find_full hash =

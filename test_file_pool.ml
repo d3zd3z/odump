@@ -11,7 +11,7 @@ object (self)
   val mutable pool = None
   val mutable known = ISet.empty
 
-  method create = File_pool.create_file_pool path
+  method create ?limit ?newfile () = File_pool.create_file_pool ?limit ?newfile path
 
   method openit = self#close; pool <- Some (File_pool.open_file_pool path)
 
@@ -54,7 +54,7 @@ let creation tmpdir =
   (* do_cleanup := false; *)
   let monitor = pool_monitor tmpdir in
 
-  monitor#create;
+  monitor#create ();
   monitor#openit;
 
   monitor#add (1 -- 2000);
@@ -74,7 +74,7 @@ let index_recovery tmpdir =
   let index_name = Filename.concat tmpdir "pool-data-0000.idx" in
   let tmp_name = index_name ^ ".old" in
   let monitor = pool_monitor tmpdir in
-  monitor#create;
+  monitor#create ();
 
   (* Check completely missing index. *)
   monitor#openit;
@@ -99,7 +99,30 @@ let index_recovery tmpdir =
   monitor#close;
   ()
 
+let newfile_check tmpdir =
+  (* do_cleanup := false; *)
+  let pfile n = Filename.concat tmpdir (Printf.sprintf "pool-data-%04d.data" n) in
+  let monitor = pool_monitor tmpdir in
+  monitor#create ~newfile:true ();
+  monitor#openit;
+  monitor#add (1 -- 1);
+  monitor#close;
+
+  assert_bool "file 0" (Sys.file_exists (pfile 0));
+  assert_bool "file 1" (not (Sys.file_exists (pfile 1)));
+
+  (* Re-open, and make sure that creates a new file. *)
+  monitor#openit;
+  monitor#add (2 -- 2);
+  monitor#add (3 -- 3);
+  monitor#close;
+
+  assert_bool "file 0" (Sys.file_exists (pfile 0));
+  assert_bool "file 1" (Sys.file_exists (pfile 1));
+  assert_bool "file 2" (not (Sys.file_exists (pfile 2)))
+
 let suite = "file_pool" >::: [
   "creation" >:: with_temp_dir creation;
   "recovery" >:: with_temp_dir index_recovery;
+  "newfile" >:: with_temp_dir newfile_check;
 ]
