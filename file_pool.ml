@@ -5,6 +5,7 @@ open Batteries
 open Printf
 
 module StringMap = Maps.StringMap
+module HashSet = Set.Make(Hash)
 
 let default_limit = 640 * 1024 * 1024
 let limit_lower_bound = 1 lsl 20
@@ -47,10 +48,23 @@ let create_file_pool ?(limit=default_limit) ?(newfile=false) path =
     fprintf out "limit=%d\n" limit in
   with_dispose ~dispose:close_out put (open_out props_name)
 
+(* Load the backup list from the given name. *)
+let get_backups path =
+  try
+    let get inp = List.of_enum @@ Enum.map Hash.of_string @@ IO.lines_of inp in
+    with_dispose ~dispose:close_in get (open_in path)
+  with
+    | Sys_error _ -> []
+
 (* Add another entry to the backup list. *)
 let append_backup path hash =
-  File.with_file_out ~mode:[`append; `create] path (fun out ->
-    fprintf out "%s\n" (Hash.to_string hash))
+  let tmp_path = path ^ ".tmp" in
+  let names = HashSet.of_enum @@ List.enum @@ get_backups path in
+  let names = HashSet.add hash names in
+  File.with_file_out ~mode:[`trunc; `create] tmp_path (fun out ->
+    let single hash = fprintf out "%s\n" (Hash.to_string hash) in
+    HashSet.iter single names);
+  Unix.rename tmp_path path
 
 (* Real Java property files are more complex than this, but we only
    need to be able to read back what we've written. *)
@@ -94,7 +108,7 @@ type node = {
   n_path: string }
 
 (* Attempt to regenerate the index for this pool file. *)
-let recover_index name file index =
+let recover_index backups_name name file index =
   Log.warnf "Index recovery for %S" name;
   index#clear;
   let limit = file#size in
@@ -102,13 +116,15 @@ let recover_index name file index =
     if pos < limit then begin
       let info = file#read_info pos in
       index#add info.Chunk.in_hash pos info.Chunk.in_kind;
+      if info.Chunk.in_kind = "back" then
+        append_backup backups_name info.Chunk.in_hash;
       loop (pos + info.Chunk.in_write_size)
     end in
   loop 0;
   index#save limit;
   index#load limit
 
-let find_backup_nodes path =
+let find_backup_nodes backups_name path =
   let redata name =
     if Str.string_match data_re name 0 then
       Some (int_of_string @@ Str.matched_group 1 name)
@@ -122,7 +138,7 @@ let find_backup_nodes path =
     let index = File_index.make (to_index_name fname) in
     begin try index#load file#size with
       | Sys_error _
-      | File_index.Index_read_error _ -> recover_index fname file index
+      | File_index.Index_read_error _ -> recover_index backups_name fname file index
     end;
     { n_file = file; n_index = index; n_path = fname } in
   List.map lookup nums
@@ -157,10 +173,11 @@ let open_file_pool path =
   let props_name = Filename.concat metadata "props.txt" in
 
   let lock_fd = open_lock (Filename.concat path "lock") in
+  let backups_name = Filename.concat metadata "backups.txt" in
 
 object (self)
   val mutable props = decode_backup_properties @@ read_flat_properties props_name
-  val mutable nodes = find_backup_nodes path
+  val mutable nodes = find_backup_nodes backups_name path
   val mutable dirty = false
   val mutable first_write = true
 
@@ -197,7 +214,7 @@ object (self)
       let pos = file#append chunk in
       index#add chunk#hash pos chunk#kind;
       if chunk#kind = "back" then
-	append_backup (Filename.concat metadata "backups.txt") chunk#hash;
+        append_backup backups_name chunk#hash;
       dirty <- true;
       first_write <- false
     end
@@ -254,12 +271,7 @@ object (self)
     release_lock lock_fd
 
   method get_backups =
-    let backups_name = Filename.concat metadata "backups.txt" in
-    try
-      let get inp = List.of_enum @@ Enum.map Hash.of_string @@ IO.lines_of inp in
-      with_dispose ~dispose:close_in get (open_in backups_name)
-    with
-	Sys_error _ -> []
+    get_backups backups_name
 
   method uuid = Uuidm.to_string props.p_uuid
 end

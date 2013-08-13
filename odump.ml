@@ -68,8 +68,6 @@ let walk path root_hash =
     (* tree_walk pool "." root_hash *)
     Nodes.walk pool "." root_hash (new walk_visitor))
 
-module HashSet = Set.Make(Hash)
-
 type du_type = {
   du_data: int64;
   du_write: int64;

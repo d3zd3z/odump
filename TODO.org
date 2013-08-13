@@ -19,6 +19,7 @@
    - [X] seen-db conversions
    - [X] backup
    - [X] Use seen-db in backup
+   - [X] Recover 'backup.txt' entries when doing index recovery
 
 ** Tasks to be comparable to jpool
 
