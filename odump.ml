@@ -32,7 +32,7 @@ let backup_compare a b = match (a, b) with
   | _ -> Log.fail "Attempt to sort non-backup nodes"
 
 let list path =
-  File_pool.with_file_pool path (fun pool ->
+  Pool_util.with_pool path (fun pool ->
     let backups = pool#get_backups in
     let get hash = (hash, Nodes.get pool hash) in
     let backups = List.map get backups in
@@ -63,7 +63,7 @@ object
 end
 
 let walk path root_hash =
-  File_pool.with_file_pool path (fun pool ->
+  Pool_util.with_pool path (fun pool ->
     let root_hash = Hash.of_string root_hash in
     (* tree_walk pool "." root_hash *)
     Nodes.walk pool "." root_hash (new walk_visitor))
@@ -128,20 +128,20 @@ end
 
 let du path root_hash =
   let root_hash = Hash.of_string root_hash in
-  File_pool.with_file_pool path (fun pool ->
+  Pool_util.with_pool path (fun pool ->
     let visitor = new du_visitor pool in
     Nodes.walk pool "." root_hash (visitor :> Nodes.visitor);
     visitor#show_result pool root_hash)
 
 let restore path node dest =
   let node = Hash.of_string node in
-  File_pool.with_file_pool path (fun pool ->
+  Pool_util.with_pool path (fun pool ->
     Restore.run_restore pool node dest)
 
 let make_cache path hash backup_dir =
   let cache_name = Mountpoint.make_cache_path path backup_dir in
   let hash = Hash.of_string hash in
-  File_pool.with_file_pool path (fun pool ->
+  Pool_util.with_pool path (fun pool ->
     Seendb.make_cache pool cache_name hash)
 
 let show_cache path =
@@ -151,10 +151,13 @@ let show_cache path =
 let create_pool path =
   File_pool.create_file_pool path
 
+let create_sql_pool path =
+  Sql_pool.create_sql_pool path
+
 let pool_clone src_path dest_path hashes =
   let hashes = List.map Hash.of_string hashes in
-  File_pool.with_file_pool src_path (fun src_pool ->
-    File_pool.with_file_pool dest_path (fun dest_pool ->
+  Pool_util.with_pool src_path (fun src_pool ->
+    Pool_util.with_pool dest_path (fun dest_pool ->
       Clone.clone_trees src_pool dest_pool hashes))
 
 (** {4 Argument processing} *)
@@ -211,6 +214,10 @@ let command_dump usage = function
 
 let command_create_pool usage = function
   | [] -> create_pool (must_pool usage)
+  | _ -> usage ()
+
+let command_create_sql usage = function
+  | [] -> create_sql_pool (must_pool usage)
   | _ -> usage ()
 
 let command_clone usage = function
@@ -302,6 +309,10 @@ let commands = Maps.StringMap.of_enum (List.enum [
 		   usage = "create-pool -pool <path>";
 		   args = [ pool_arg ];
 		   action = command_create_pool };
+  "create-sql", { help = "Create an sql-based storage pool with the given base filename";
+                  usage = "create-sql -pool <path>";
+                  args = [ pool_arg ];
+                  action = command_create_sql };
   "clone", { help = "Clone a backup to a new pool";
 	     usage = "clone -pool <path> <dest-pool-path> <hashes>";
 	     args = [ pool_arg ];

@@ -59,6 +59,10 @@ end
 
 val open_chunk_file: string -> chunk_file
 
+(** {2 Low level construction. *)
+val make_plain_chunk : string -> Hash.t option -> string -> chunk
+val make_compressed_chunk : string -> Hash.t option -> string -> int -> chunk
+
 (** {2 Internal testing}
     These routines aren't intended to be used by normal clients, but
     are exposed to help with unit testing. *)

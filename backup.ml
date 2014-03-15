@@ -235,6 +235,6 @@ let save pool cache_dir backup_path atts =
   Seendb.with_cache cache_dir (fun cache -> save' pool cache backup_path atts)
 
 let dump pool_path backup_path atts =
-  File_pool.with_file_pool pool_path (fun pool ->
+  Pool_util.with_pool pool_path (fun pool ->
     let cache = Mountpoint.make_cache_path pool_path backup_path in
     save pool cache backup_path atts)

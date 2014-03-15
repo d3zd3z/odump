@@ -12,6 +12,11 @@
    - [X] lchown  - exist
    - [ ] read/write that don't copy (later?)  will block the GC
 
+** SQL pool
+
+   - [X] Implement SQL pool, similar to cdump implementation.
+   - [ ] Migrate seen db into the SQL database.
+
 ** Tasks to get minimal functionality
 
    - [X] Generic walker code

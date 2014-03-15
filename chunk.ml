@@ -153,6 +153,8 @@ object
   method kind = kind
 end
 
+let make_plain_chunk kind maybe_hash data = new plain_chunk kind maybe_hash data
+
 class compressed_chunk kind maybe_hash zdata data_length =
   let data = lazy (uncompress zdata data_length) in
   let hash = lazy (match maybe_hash with
@@ -166,6 +168,9 @@ object
   method zdata = Some zdata
   method kind = kind
 end
+
+let make_compressed_chunk kind maybe_hash zdata data_length =
+  new compressed_chunk kind maybe_hash zdata data_length
 
 let chunk_of_string kind data = new plain_chunk kind None data
 

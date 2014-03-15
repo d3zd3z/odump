@@ -275,7 +275,3 @@ object (self)
 
   method uuid = Uuidm.to_string props.p_uuid
 end
-
-let with_file_pool path f =
-  with_dispose ~dispose:(fun x -> x#close) f
-    (open_file_pool path)

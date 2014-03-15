@@ -46,6 +46,10 @@ let cache_path backup_path =
 
 let make_cache_path pool_dir backup_path =
   let cp = cache_path backup_path in
-  let seen_dir = Filename.concat pool_dir "seen" in
+  let seen_dir =
+    if Sys.is_directory pool_dir then
+      Filename.concat pool_dir "seen"
+    else
+      pool_dir ^ ".seen" in
   mkdir_safely seen_dir;
   Filename.concat seen_dir cp
