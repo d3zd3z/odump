@@ -44,8 +44,7 @@ object (self)
       if not (Sys.is_directory mirror) then
 	failwith (sprintf "Mirror dir '%s' doesn't exist" mirror))
       mirror;
-    if not (Sys.is_directory pool) then
-      failwith (sprintf "Pool dir doesn't exist: '%s'" pool)
+    Pool_util.with_pool pool (fun _ -> ())
 
   method teardown_check_paths = ()
   method setup_start_snapshot = ()
