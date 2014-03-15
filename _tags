@@ -27,4 +27,4 @@
 <uuidm-0.9.4>: include
 
 # Warn about (nearly) everything
-<*.ml> or <*.mli>: warn(+A-4)
+<*.ml> or <*.mli>: warn(+A-4-44-45)
