@@ -22,9 +22,10 @@ let schema = {
 }
 
 let create_sql_pool path =
-  let blob_name = path ^ ".blobs" in
+  Unix.mkdir path 0o755;
+  let blob_name = path ^ "/blobs" in
   Unix.mkdir blob_name 0o755;
-  let db = Db.connect path schema in
+  let db = Db.connect (path ^ "/data.db") schema in
   Db.close db
 
 let sql_to_hash = function
@@ -33,10 +34,12 @@ let sql_to_hash = function
 
 exception TODO of string
 let open_sql_pool path =
-  let blob_path = path ^ ".blobs" in
-  Misc.ensure_file ~what:"pool file" path;
+  let blob_path = path ^ "/blobs" in
+  let db_path = path ^ "/data.db" in
+  Misc.ensure_directory ~what:"pool dir" path;
+  Misc.ensure_file ~what:"pool dir" db_path;
   Misc.ensure_directory ~what:"pool.blobs" blob_path;
-  let db = Db.connect path schema in
+  let db = Db.connect db_path schema in
 
   let chunk_path oid =
     let text_oid = Hash.to_string oid in

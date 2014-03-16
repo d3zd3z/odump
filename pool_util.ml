@@ -8,7 +8,8 @@ exception Pool_error of string
 let open_pool path =
   if Sys.file_exists (path ^ "/metadata/props.txt") then
     File_pool.open_file_pool path
-  else if Sys.is_directory (path ^ ".blobs") && Sys.file_exists path then
+  else if Sys.is_directory (path ^ "/blobs") &&
+      Sys.file_exists (path ^ "/data.db") then
     Sql_pool.open_sql_pool path
   else
     raise (Pool_error ("Unable to open pool " ^ path))
