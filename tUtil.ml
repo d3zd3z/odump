@@ -36,7 +36,7 @@ let rec cleanup path =
     Printf.printf "[Leaving '%s' for debugging]\n" path
 
 let with_temp_dir op () =
-  let dir = Filename.temp_dir_name in
+  let dir = Filename.get_temp_dir_name () in
   let rec loop count =
     if count = 0 then failwith "Unable to create temp dir";
     let name = Filename.concat dir (random_name "odump-") in

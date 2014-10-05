@@ -23,3 +23,4 @@
 <test/test.{native,byte}>: use_uuidm
 <test/*.ml{,i}>: use_uuidm
 # OASIS_STOP
+<src/*.ml>: warn(-3)

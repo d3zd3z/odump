@@ -16,6 +16,10 @@ let _ = dispatch begin function
   | Before_options ->
     (* Force ocamlfind.  Makes it easier to invoke the build without make rules. *)
     Options.use_ocamlfind := true;
+    (* These are useful in 4.02.0 to prevent the warning about these
+     * tags *)
+    mark_tag_used "use_uuidm";
+    mark_tag_used "use_dbunix";
 
   | After_rules ->
     (* dep ["link"; "ocaml"; "use_dbunix"] ["dbunix_stubs.o"]; *)

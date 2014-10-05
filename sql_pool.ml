@@ -62,7 +62,7 @@ let open_sql_pool path =
     close_out wfd in
 
   let read_chunk oid zsize =
-    let buf = String.create zsize in
+    let buf = Bytes.create zsize in
     let _, fname = chunk_path oid in
     let rfd = open_in_bin fname in
     (* TODO: Close on error *)

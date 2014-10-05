@@ -1,6 +1,6 @@
 (* Properties are Maps that can be encoded in a small number of XML formats. *)
 
-open Batteries
+(* open Batteries *)
 
 type t = string Maps.StringMap.t
 

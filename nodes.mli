@@ -1,6 +1,6 @@
 (* Backup nodes *)
 
-open Batteries
+(* open Batteries *)
 
 type indirect_kind =
   | Dir_Indirect
