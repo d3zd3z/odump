@@ -36,6 +36,12 @@ On Arch, the following seems sufficient to build (many are AUR):
   - ocaml-pxp
   - ocaml-sqlite3
 
+On Fedora:
+
+  - Just install ocaml, and use Opam below)
+  - Will need:
+    libattr-devel
+
 Unfortunately, several libraries pull in camomile, which has a
 dependency on a fairly large runtime library.  TODO: Figure out how to
 point directly at this library so that this can be used on a rescue
