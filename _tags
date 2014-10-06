@@ -25,3 +25,5 @@
 # Warn about (nearly) everything
 <*.ml> or <*.mli>: warn(+A-4-44-45-48)
 <*.ml> or <*.mli>: warn_error(+A-4-44-45-48)
+
+<test-pool>: -traverse
