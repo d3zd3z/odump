@@ -1,9 +1,0 @@
-# OASIS_START
-# DO NOT EDIT (digest: a85b47e2484047eaa463f201b2a9a1ca)
-version = "0.9.4"
-description = "Universally unique identifiers (UUIDs) for OCaml"
-archive(byte) = "uuidm.cma"
-archive(native) = "uuidm.cmxa"
-exists_if = "uuidm.cma"
-# OASIS_STOP
-

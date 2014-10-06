@@ -9,6 +9,8 @@
 # <*.ml> or <*.mli> or <*.native> or <*.byte>: package(config-file)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(netstring)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: package(shell)
+<*.ml> or <*.mli> or <*.native> or <*.byte>: package(config-file)
+<*.ml> or <*.mli> or <*.native> or <*.byte>: package(uuidm)
 <*.ml> or <*.mli> or <*.native> or <*.byte>: thread
 
 <*.ml> or <*.mli>: annot
@@ -19,12 +21,6 @@
 
 # Use the native library.
 <*.{native,byte}>: use_dbunix
-
-# Jean-Christophe Filliatre's utilities
-<ds>: include
-
-<config-file-1.0>: include
-<uuidm-0.9.4>: include
 
 # Warn about (nearly) everything
 <*.ml> or <*.mli>: warn(+A-4-44-45-48)
